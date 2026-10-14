@@ -1,4 +1,5 @@
-<title>2027 MLB Projections</title>
+<!doctype html><html lang="en"><title>2027 MLB Projections</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
@@ -22,7 +23,7 @@ h2{font:600 1.35rem/1.1 var(--display);text-transform:uppercase;letter-spacing:.
 .good{color:var(--good)}.bad{color:var(--bad)}
 .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin:8px 0 12px}
 .controls label{display:flex;flex-direction:column;gap:3px;font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-select,input{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:6px 8px;min-width:0}
+select,input{box-sizing:border-box;font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:6px 8px;min-width:0}
 input[type=search]{width:min(260px,70vw)}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .seg button{font:600 .9rem var(--body);background:var(--surface);color:var(--fg);border:0;padding:7px 14px;cursor:pointer}
@@ -45,9 +46,32 @@ tbody tr{cursor:pointer}tbody tr:hover{background:var(--chip)}tbody tr.sel{backg
 .small{font-size:.8rem;color:var(--muted)}
 .foot{color:var(--muted);font-size:.82rem;margin-top:22px;max-width:90ch}
 .foot a{color:inherit;text-decoration:underline;text-underline-offset:2px}
-.stgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-top:10px}
+.stgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:14px;margin-top:10px}
 .stgrid table{font-size:.82rem}.stgrid th,.stgrid td{padding:6px 5px}.stgrid caption{text-align:left;font-weight:700;padding:6px 8px;color:var(--fg)}
 .stbox{background:var(--surface);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+details.notes{margin:0 0 10px}details.notes summary{cursor:pointer;font-size:.82rem;font-weight:600;color:var(--muted);padding:2px 0}
+details.notes p{margin:6px 0}
+.back{display:none;margin-top:10px;font:600 .85rem var(--body);background:var(--chip);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:7px 12px;cursor:pointer}
+@media (max-width:880px){.panel{position:static}.back{display:inline-block}}
+@media (max-width:700px){
+.wrap{padding-block:16px 40px}
+h1{font-size:2.1rem}
+.lede{font-size:.9rem;line-height:1.45}
+.meta{font-size:.66rem}
+.track{grid-template-columns:1fr 1fr;gap:8px}
+.tile{padding:9px 10px}.tile .k{font-size:.6rem;letter-spacing:.05em}.tile .v{font-size:1.35rem}.tile .s{font-size:.72rem;line-height:1.3}
+.controls{gap:8px}.controls label{flex:1 1 40%}.controls label[for=q]{flex-basis:100%}
+input[type=search]{width:100%}#minopp{width:100%!important}
+.seg button{padding:7px 10px;font-size:.82rem}
+table{font-size:.8rem}th,td{padding:6px 5px}
+th:first-child,td.rk{display:none}
+th:nth-child(2),td:nth-child(2){position:sticky;left:0;background:var(--surface);z-index:1;box-shadow:1px 0 0 var(--line);max-width:9.5em;overflow:hidden;text-overflow:ellipsis}
+th:nth-child(2){z-index:3}
+tbody tr.sel td:nth-child(2){background:var(--chip)}
+.tablewrap{max-height:62vh}
+.panel h3{font-size:1.4rem}
+}
 [hidden]{display:none!important}
 </style>
 <div class="wrap">
@@ -65,15 +89,19 @@ tbody tr{cursor:pointer}tbody tr:hover{background:var(--chip)}tbody tr.sel{backg
   <div class="seg" role="group" aria-label="Stats view"><button id="bStd" aria-pressed="true">Standard stats</button><button id="bAdv" aria-pressed="false">Advanced stats</button></div>
   <div class="seg" role="group" aria-label="WAR view"><button id="bE" aria-pressed="true">Projected WAR (with injury risk)</button><button id="bF" aria-pressed="false">Full-season WAR (if healthy)</button></div>
 </div>
+<details class="notes" id="notes"><summary>About these numbers</summary>
 <p class="small" id="warnote"></p>
 <p class="small" id="stdnote">Hits, doubles, triples, walks and strikeouts come straight from the projected rates. R, RBI and SB (hitters) and W and L (pitchers) are estimates: they depend on lineup slot, teammates and run support, so treat them as rougher than the rest. Pitcher hits allowed and WHIP assume league-average luck on balls in play. Players with no major-league time yet (most prospects) are not projected.</p>
 <p class="small" id="rpnote" hidden>Roles come from each pitcher's latest season: closer = 10+ saves, setup = 3+ saves or 10+ holds. Saves are projected for 2027 only and are the least certain number here, since closer jobs change hands. Leverage WAR scales WAR by (1 + leverage) / 2, using typical leverage by role (closer 1.8, setup 1.35, middle 0.95), an approximation of how FanGraphs credits relievers for pitching in high-leverage spots.</p>
+</details>
 <div class="grid">
   <div class="tablewrap"><table><thead id="th"></thead><tbody id="tb"></tbody></table></div>
   <aside class="panel" id="panel" aria-live="polite"><div class="small">Select a player to see the five-year path and ranges.</div></aside>
 </div>
 <h2>Projected 2027 standings</h2>
+<details class="notes" id="stnotes"><summary>How the standings work</summary>
 <p class="small">Team wins add up the projected WAR of each roster: hitters capped at 6,150 PA and pitchers at 1,450 IP per team, with gaps filled at replacement level. Rosters are each player's latest team at the end of 2026, so offseason trades and free-agent signings aren't reflected yet. Odds come from 20,000 simulated seasons using the method's actual error in a 2008–2025 backtest (9.9 wins, against 10.2 for last year's record regressed halfway to .500), which covers both roster changes and luck. Range is the middle 80% of simulated win totals; Div and Playoff are the share of simulations in which the team wins its division or makes the playoffs. Playoff odds assume three division winners and three wild cards per league.</p>
+</details>
 <div class="stgrid" id="standings"></div>
 <p class="foot">Validation: refit at every season from 2006 using only data available at the time, scored 1–3 years ahead against Tom Tango's classic Marcel, with a locked holdout season scored once. RMSE of wOBA (hitters) and FIP (pitchers), weighted by playing time. Fielding includes positional value and, from 2016, Statcast Outs Above Average.</p>
 <p class="foot"><strong>Data and credits.</strong> Projections, code and analysis by Jake Mitchell. Built from the <a href="https://sabr.org/lahman-database/">Lahman Baseball Database</a> (Sean Lahman / SABR, <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>), <a href="https://baseballsavant.mlb.com/">Baseball Savant</a> / Statcast data (© MLB Advanced Media; used for non-commercial analysis), and the <a href="https://github.com/chadwickbureau/register">Chadwick Bureau register</a> (<a href="https://opendatacommons.org/licenses/by/1-0/">ODC-By 1.0</a>). No other projection system is used.</p>
@@ -116,7 +144,8 @@ function render(){
   document.getElementById('tb').innerHTML=list.slice(0,400).map((r,i)=>`<tr tabindex="0" data-n="${r.name.replace(/"/g,'&quot;')}" class="${r.name===sel?'sel':''}"><td class="rk">${i+1}</td>`+cols.map(c=>`<td>${f(c,r[c])}</td>`).join('')+'</tr>').join('');
 }
 document.getElementById('th').addEventListener('click',e=>{const k=e.target.closest('th')?.dataset.k;if(!k)return;if(k===sortKey)sortDir*=-1;else{sortKey=k;sortDir=(k==='FIP'||k==='BB%'||k==='HR/9'||k==='name'||k==='age')?1:-1;}render();});
-function pick(name){sel=name;render();panel(name);}
+function pick(name){sel=name;render();panel(name);if(matchMedia('(max-width:880px)').matches)document.getElementById('panel').scrollIntoView({behavior:'smooth',block:'start'});}
+try{if(matchMedia('(min-width:701px)').matches){document.getElementById('notes').open=true;document.getElementById('stnotes').open=true;}}catch(e){}
 document.getElementById('tb').addEventListener('click',e=>{const tr=e.target.closest('tr');if(tr)pick(tr.dataset.n);});
 document.getElementById('tb').addEventListener('keydown',e=>{if(e.key==='Enter'){const tr=e.target.closest('tr');if(tr)pick(tr.dataset.n);}});
 function spark(pts,key,lo,hi,label,dec,invert){
@@ -139,7 +168,7 @@ function panel(name){
   const rp=role==='pit'&&a.role&&a.role!=='SP'?` · ${RN[a.role]}${a.SV!=null&&!Number.isNaN(a.SV)?`, ${f('SV',a.SV)} SV`:''} · ${f('WAR',a.WAR_lev)} leverage WAR`:(role==='pit'?' · Starter':'');
   document.getElementById('panel').innerHTML=`<h3>${name}</h3><div class="sub">Age ${a.age} in ${a.season} · ${line} · ${f('WAR',a.WAR)} projected WAR (${f('WAR',a.WAR_lo)} to ${f('WAR',a.WAR_hi)}) · ${f('WAR',a.WAR_ft)} if healthy${rp}</div>`+
     spark(pts,wv,wv+'_lo',wv+'_hi',wl,1,false)+spark(pts,main,main+'_lo',main+'_hi',main,role==='hit'?3:2,role!=='hit')+
-    `<p class="small">${wv==='WAR'?'Projected WAR ranges include playing-time risk':'Full-season WAR ranges are talent only'}; ${main} ranges are for true talent.</p>`;
+    `<p class="small">${wv==='WAR'?'Projected WAR ranges include playing-time risk':'Full-season WAR ranges are talent only'}; ${main} ranges are for true talent.</p><button class="back" type="button" onclick="document.querySelector('.tablewrap').scrollIntoView({behavior:'smooth',block:'start'})">↑ Back to the list</button>`;
 }
 function setView(v){wv=v;sortKey=v;sortDir=-1;document.getElementById('bE').setAttribute('aria-pressed',v==='WAR');document.getElementById('bF').setAttribute('aria-pressed',v==='WAR_ft');
   document.getElementById('warnote').textContent=NOTE[v];render();if(sel)panel(sel);}
