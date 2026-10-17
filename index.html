@@ -84,7 +84,7 @@ table{font-size:.8rem}th,td{padding:6px 5px}
 <div class="wrap">
 <h1>2027 MLB Projections</h1>
 <p class="lede">Five-year projections for every MLB hitter and pitcher, fit through the 2026 season. Component rates use fitted regression and season weights, per-horizon LightGBM and neural-network corrections, and a Statcast layer: an xwOBA-minus-wOBA luck correction for hitters, and a skill layer (velocity, whiffs, called strikes and more) for pitchers. Projected playing time includes injury and role risk; full-season values show a healthy year. Every number carries an 80% range.</p>
-<div class="meta"><span>Last updated October 14, 2026, before the 2027 season</span><span>Fingerprint (SHA-256) <code id="sha"></code></span></div>
+<div class="meta"><span>Last updated October 14, 2026, before the 2027 season</span><span><a href="lab.html">Aging curves &amp; comps →</a></span><span>Fingerprint (SHA-256) <code id="sha"></code></span></div>
 <div class="track" id="track"></div>
 <h2>Leaderboard</h2>
 <div class="controls">
@@ -175,7 +175,7 @@ function panel(name){
   const rp=role==='pit'&&a.role&&a.role!=='SP'?` · ${RN[a.role]}${a.SV!=null&&!Number.isNaN(a.SV)?`, ${f('SV',a.SV)} SV`:''} · ${f('WAR',a.WAR_lev)} leverage WAR`:(role==='pit'?' · Starter':'');
   document.getElementById('panel').innerHTML=`<h3>${name}</h3><div class="sub">Age ${a.age} in ${a.season} · ${line} · ${f('WAR',a.WAR)} projected WAR (${f('WAR',a.WAR_lo)} to ${f('WAR',a.WAR_hi)}) · ${f('WAR',a.WAR_ft)} if healthy${rp}</div>`+
     spark(pts,wv,wv+'_lo',wv+'_hi',wl,1,false)+spark(pts,main,(main+'_slo' in a)?main+'_slo':main+'_lo',(main+'_shi' in a)?main+'_shi':main+'_hi',main,role==='hit'?3:2,role!=='hit')+
-    `<p class="small">${wv==='WAR'?'Projected WAR ranges include playing-time risk':'Full-season WAR ranges are talent only'}; ${main} ranges include single-season luck: his actual ${main} should land inside about 4 seasons in 5.</p><button class="back" type="button" onclick="document.querySelector('.tablewrap').scrollIntoView({behavior:'smooth',block:'start'})">↑ Back to the list</button>`;
+    `<p class="small">${wv==='WAR'?'Projected WAR ranges include playing-time risk':'Full-season WAR ranges are talent only'}; ${main} ranges include single-season luck: his actual ${main} should land inside about 4 seasons in 5.</p><p class="small"><a href="lab.html#${role}:${encodeURIComponent(name)}">${name}: aging curve and comps →</a></p><button class="back" type="button" onclick="document.querySelector('.tablewrap').scrollIntoView({behavior:'smooth',block:'start'})">↑ Back to the list</button>`;
 }
 function setView(v){wv=v;sortKey=v;sortDir=-1;document.getElementById('bE').setAttribute('aria-pressed',v==='WAR');document.getElementById('bF').setAttribute('aria-pressed',v==='WAR_ft');
   document.getElementById('warnote').textContent=NOTE[v];render();if(sel)panel(sel);}
