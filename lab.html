@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
 /* Layout: matches the projections page — masthead, then two panels (aging curves, comps) and the archetype key */
-:root{--bg:#ffffff;--surface:#fff;--fg:#14325c;--muted:#4a6285;--line:#d6dfeb;--grid:#e9eef5;--accent:#1f4e8c;--bad:#b23a2e;--chip:#eef3f9;--ink:#0d1a2e;
+:root{--bg:#ffffff;--surface:#fff;--fg:#14325c;--muted:#4a6285;--line:#d6dfeb;--grid:#e9eef5;--accent:#1f4e8c;--bad:#b23a2e;--chip:#eef3f9;--ink:#0d1a2e;--sel:#0e9aa7;
 --a0:#1f4e8c;--a1:#b23a2e;--a2:#2c8a66;--a3:#c98604;--a4:#7a48b5;--a5:#c2537f;--aall:#8193ab;
 --display:"Barlow Condensed","Arial Narrow",sans-serif;--body:"Source Sans 3","Segoe UI",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace}
 html{color-scheme:light}
@@ -35,6 +35,9 @@ h2{font:600 1.35rem/1.1 var(--display);text-transform:uppercase;letter-spacing:.
 .chip[aria-pressed="false"]{color:var(--muted);opacity:.6}
 .chip[aria-pressed="false"] i{background:transparent!important;box-shadow:inset 0 0 0 1.5px var(--muted)}
 .rolebar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0 4px}
+.archbadge{display:inline-flex;align-items:center;gap:7px;font:600 .9rem var(--body);color:var(--fg);background:var(--chip);border-radius:999px;padding:5px 12px}
+.archbadge i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.archbadge span{font:600 .7rem var(--body);text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
 select,input{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:6px 8px;min-width:0;text-transform:none;letter-spacing:0}
 input[type=search]{width:220px;max-width:100%}
 label.check{display:inline-flex;gap:6px;align-items:center;font-size:.9rem;text-transform:none;letter-spacing:0;color:var(--fg);cursor:pointer}
@@ -89,6 +92,7 @@ td.sim{font:.8rem var(--mono);white-space:nowrap}
   <div class="seg" role="group" aria-label="Players"><button id="bH" aria-pressed="true">Hitters</button><button id="bP" aria-pressed="false">Pitchers</button></div>
   <label class="ctl" for="q" style="flex-direction:row;align-items:center;gap:8px">Player <input id="q" type="search" list="names" placeholder="Search a name" autocomplete="off"></label>
   <datalist id="names"></datalist>
+  <div class="archbadge" id="archBadge" aria-live="polite"></div>
 </div>
 
 <h2>Aging curves</h2>
@@ -129,7 +133,7 @@ const COL=['var(--a0)','var(--a1)','var(--a2)','var(--a3)','var(--a4)','var(--a5
 const YEARS=[2027,2028,2029,2030,2031];
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const DEF={hit:{metric:'wrc',player:null},pit:{metric:'fip',player:null}};
-const st={role:'hit',metric:'wrc',groups:{hit:[0,1,2],pit:[0,1,2]},mode:'raw',player:{hit:null,pit:null},showPlayer:true,sameAge:true,poolOff:{hit:new Set(),pit:new Set()},hl:null};
+const st={role:'hit',metric:'wrc',groups:{hit:[],pit:[]},mode:'raw',player:{hit:null,pit:null},showPlayer:true,sameAge:true,poolOff:{hit:new Set(),pit:new Set()},hl:null};
 const G=()=>L[st.role];
 const M=k=>G().metrics.find(m=>m.k===(k||st.metric));
 const gname=g=>g==='all'?(st.role==='hit'?'All hitters':'All pitchers'):G().arch[g].name;
@@ -139,6 +143,10 @@ const gcol=g=>g==='all'?CALL:COL[g];
 // deep link: #hit:Name or #pit:Name
 try{const h=decodeURIComponent(location.hash.slice(1));const m=h.match(/^(hit|pit):(.+)$/);if(m){st.role=m[1];st.metric=m[1]==='hit'?'wrc':'fip';if(L[m[1]].players.find(p=>p.n===m[2]))st.player[m[1]]=m[2]}}catch(e){}
 const P=()=>G().players.find(p=>p.n===st.player[st.role]);
+// on every player change the aging chart starts from his archetype and all players; others stay one tap away
+function resetGroups(r){const pl=L[r].players.find(x=>x.n===st.player[r]);st.groups[r]=pl?[pl.r,'all']:[0,'all']}
+['hit','pit'].forEach(resetGroups);
+function setPlayer(name){st.player[st.role]=name;st.hl=null;resetGroups(st.role);draw()}
 
 function fmt(k,v,signed){const m=M(k);let s=Math.abs(v).toFixed(m.dec);if(m.dec===3)s=s.replace(/^0/,'');const sg=v<0?'−':(signed&&v>0?'+':'');return sg+s+(m.unit==='%'?'%':'')}
 function fv(feat,v){if(feat==='iso'||feat==='avg')return v.toFixed(3).replace(/^0/,'');if(feat==='k'||feat==='bb')return v.toFixed(1)+'%';if(feat==='sb')return v.toFixed(0);if(feat==='hr9'||feat==='fip')return v.toFixed(2);if(feat==='wrc')return v.toFixed(0);if(feat==='sp')return v?'SP':'RP';return v.toFixed(2)}
@@ -157,6 +165,7 @@ function controls(){
   $('#names').innerHTML=G().players.map(p=>`<option value="${esc(p.n)}">`).join('');
   $('#q').value=st.player[st.role];
   $('#ovName').textContent=st.player[st.role]+' (projection)';
+  const pp=P();$('#archBadge').innerHTML=pp?`<span>Archetype</span><i style="background:${COL[pp.r]}"></i>${esc(G().arch[pp.r].name)}`:'';
 }
 function niceTicks(lo,hi,n){const s0=(hi-lo)/n;const mg=10**Math.floor(Math.log10(s0));const e=s0/mg;const step=(e>=7.5?10:e>=3.5?5:e>=1.5?2:1)*mg;const t=[];for(let v=Math.ceil(lo/step)*step;v<=hi+step*1e-6;v+=step)t.push(+v.toFixed(8));return t}
 function placeTip(tip,box,x,y){tip.hidden=false;const bw=box.clientWidth,tw=tip.offsetWidth,th=tip.offsetHeight;let l=x+14;if(l+tw>bw)l=x-tw-14;if(l<0)l=Math.max(0,Math.min(bw-tw,x-tw/2));let t=y-th-12;if(t<0)t=y+16;tip.style.left=l+'px';tip.style.top=t+'px'}
@@ -200,11 +209,11 @@ function drawAging(){
     for(const dy of [-10,19,-23,32]){const y=y0+dy;if(y<mt+2||y>mt+ph)continue;if(placed.every(b=>Math.abs(b.x-x)>52||Math.abs(b.y-y)>12)){placed.push({x,y});labs.push({x,y,t:'Peak '+s.pk.age,c:gcol(s.g)});break}}});
   labs.forEach(l=>{g+=`<text x="${l.x}" y="${Math.max(mt+2,l.y)}" text-anchor="middle" style="fill:${l.c};font-size:10.5px;font-weight:600">${l.t}</text>`});
   if(pl){const hasB=pl.pts[0].lo!=null;
-    if(hasB)g+=`<path d="${area(pl.pts)}" style="fill:var(--ink);opacity:.08"/>`;
-    g+=`<path d="${path(pl.pts)}" style="fill:none;stroke:var(--ink);stroke-width:2;stroke-dasharray:5 3"/>`;
-    pl.pts.forEach(d=>{g+=`<circle cx="${X(d.a)}" cy="${Y(d.v)}" r="3.6" style="fill:var(--ink);stroke:#fff;stroke-width:1.5"/>`});
+    if(hasB)g+=`<path d="${area(pl.pts)}" style="fill:var(--sel);opacity:.12"/>`;
+    g+=`<path d="${path(pl.pts)}" style="fill:none;stroke:var(--sel);stroke-width:2.5;stroke-dasharray:5 3"/>`;
+    pl.pts.forEach(d=>{g+=`<circle cx="${X(d.a)}" cy="${Y(d.v)}" r="3.6" style="fill:var(--sel);stroke:#fff;stroke-width:1.5"/>`});
     const e=pl.pts[4],ex=X(e.a),end=ex>ml+pw-110;
-    g+=`<text x="${end?ex:ex+7}" y="${end?Y(e.v)+16:Y(e.v)+4}" text-anchor="${end?'end':'start'}" style="fill:var(--ink);font-size:10.5px;font-weight:600">${esc(p.n)}</text>`}
+    g+=`<text x="${end?ex:ex+7}" y="${end?Y(e.v)+16:Y(e.v)+4}" text-anchor="${end?'end':'start'}" style="fill:var(--sel);font-size:10.5px;font-weight:600">${esc(p.n)}</text>`}
   g+=`<line id="xh" y1="${mt}" y2="${mt+ph}" style="stroke:var(--muted);stroke-dasharray:2 3" visibility="hidden"/><g id="xhd"></g><rect id="hov" x="${ml}" y="${mt}" width="${pw}" height="${ph}" style="fill:transparent"/>`;
   svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('height',H);svg.innerHTML=g;
   const xh=svg.querySelector('#xh'),xd=svg.querySelector('#xhd'),hov=svg.querySelector('#hov');
@@ -214,7 +223,7 @@ function drawAging(){
     let d='',h=`<div class="h">Age ${a}${n?` <span style="opacity:.6;font-weight:400">· ${n} changes</span>`:''}</div>`;
     ser.forEach(s=>{const q=s.pts.find(x=>x.a===a);if(!q)return;d+=`<circle cx="${X(a)}" cy="${Y(q.v)}" r="4" style="fill:${gcol(s.g)}"/>`;
       h+=`<div class="r"><span><i class="sw" style="background:${gcol(s.g)}"></i>${esc(gname(s.g))}</span><span>${fmt(m.k,q.v,delta)}</span></div>`});
-    if(pl){const q=pl.pts.find(x=>x.a===a);if(q)h+=`<div class="r"><span><i class="sw" style="background:#fff"></i>${esc(p.n)} ’${String(YEARS[a-p.a]).slice(2)}</span><span>${fmt(m.k,q.v,delta)}</span></div>`}
+    if(pl){const q=pl.pts.find(x=>x.a===a);if(q)h+=`<div class="r"><span><i class="sw" style="background:#2fd0dd"></i>${esc(p.n)} ’${String(YEARS[a-p.a]).slice(2)}</span><span>${fmt(m.k,q.v,delta)}</span></div>`}
     xd.innerHTML=d;placeTip(tip,box,X(a)*r.width/W,ev.clientY-r.top)}
   hov.addEventListener('pointermove',move);hov.addEventListener('pointerdown',move);
   hov.addEventListener('pointerleave',()=>{tip.hidden=true;xh.setAttribute('visibility','hidden');xd.innerHTML=''});
@@ -225,7 +234,7 @@ function drawAging(){
     [32,35].forEach(a=>{const v=at(a);if(v!=null&&a>pk.age)ro+=`<div><span>By age ${a}</span><b>${fmt(m.k,v,true)}</b></div>`})}
   if(p)ro+=`<div><span>${esc(p.n)} 2027 → 2031</span><b>${fmt(m.k,p.p[m.k][0])} → ${fmt(m.k,p.p[m.k][4])}</b></div>`;
   $('#readout').innerHTML=ro;
-  $('#agingNote').textContent=(pl?`Dashed line: ${p.n}'s 2027–2031 projection (${G().arch[p.r].name})${pl.pts[0].lo!=null?', with his 80% talent range':''}. `:'')+'The dashed slate line is everyone combined.';
+  $('#agingNote').textContent=(pl?`Teal dashed line: ${p.n}'s 2027–2031 projection${pl.pts[0].lo!=null?', with his 80% talent range':''}. `:'')+'The dashed slate line is everyone combined. Add other archetypes from the menu above the chart.';
 }
 
 /* ---------------- comps ---------------- */
@@ -251,14 +260,14 @@ function drawComps(){
     cs.forEach(({c})=>{const i=gr.players.indexOf(c),on=st.hl===c.n;g+=`<circle data-i="${i}" cx="${X(c.x)}" cy="${Y(c.y)}" r="${on?7.5:5.5}" style="fill:${COL[c.r]};stroke:#fff;stroke-width:1.5"/>`;
       if(on){const lx=X(c.x),e=lx>W-140;g+=`<text x="${e?lx-10:lx+10}" y="${Y(c.y)+4}" text-anchor="${e?'end':'start'}" style="fill:var(--ink);font-size:11px;font-weight:600">${esc(c.n)}</text>`}});
     const tx=X(p.x),ty=Y(p.y),e=tx>W-150;
-    g+=`<circle cx="${tx}" cy="${ty}" r="13" style="fill:none;stroke:var(--bad);stroke-width:1.5;opacity:.55"/><circle cx="${tx}" cy="${ty}" r="7" style="fill:var(--bad);stroke:#fff;stroke-width:2"/>`;
-    g+=`<text x="${e?tx-18:tx+18}" y="${ty-12}" text-anchor="${e?'end':'start'}" style="fill:var(--bad);font-family:var(--display);font-size:15px;font-weight:700">${esc(p.n)}</text>`}
+    g+=`<circle cx="${tx}" cy="${ty}" r="13" style="fill:none;stroke:var(--sel);stroke-width:2;opacity:.6"/><circle cx="${tx}" cy="${ty}" r="7.5" style="fill:var(--sel);stroke:#fff;stroke-width:2"/>`;
+    g+=`<text x="${e?tx-18:tx+18}" y="${ty-12}" text-anchor="${e?'end':'start'}" style="fill:var(--sel);font-family:var(--display);font-size:15px;font-weight:700">${esc(p.n)}</text>`}
   svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('height',H);svg.innerHTML=g;
   const F=gr.feats;
   function show(ev){const t=ev.target;if(t.dataset.i===undefined){tip.hidden=true;return}const c=gr.players[+t.dataset.i],r=svg.getBoundingClientRect(),cm=cs.find(x=>x.c===c);
     tip.innerHTML=`<div class="h">${esc(c.n)}</div><div style="opacity:.7;margin-bottom:3px">Age ${c.a} · ${esc(gr.arch[c.r].name)}${c.role?' · '+c.role:''}</div>`+F.filter(f=>f.k!=='sp').map((f,i)=>`<div class="r"><span>${esc(f.label)}</span><span>${fv(f.k,c.s[F.indexOf(f)])}</span></div>`).join('')+(cm?`<div class="r" style="color:#ff9aa2;margin-top:2px"><span>Match</span><span>${simOf(cm.d).toFixed(1)}</span></div>`:'');
     placeTip(tip,box,(+t.getAttribute('cx'))*r.width/W,(+t.getAttribute('cy'))*r.height/H)}
-  svg.onpointermove=show;svg.onpointerdown=e=>{show(e);const t=e.target;if(t.dataset.i!==undefined){const c=gr.players[+t.dataset.i];if(!set.has(c)){st.player[st.role]=c.n;st.hl=null;draw()}}};svg.onpointerleave=()=>{tip.hidden=true};
+  svg.onpointermove=show;svg.onpointerdown=e=>{show(e);const t=e.target;if(t.dataset.i!==undefined){const c=gr.players[+t.dataset.i];if(!set.has(c))setPlayer(c.n)}};svg.onpointerleave=()=>{tip.hidden=true};
   // list
   if(!p){$('#compList').innerHTML='<div class="small">Pick a player to see his comps.</div>';return}
   const mk=gr.main,mm=M(mk),lowm=mm.better==='low';
@@ -291,7 +300,7 @@ function drawKey(){
 function draw(){controls();drawAging();drawComps();drawKey()}
 function setRole(r){if(st.role===r)return;st.role=r;st.metric=r==='hit'?'wrc':'fip';st.hl=null;draw()}
 $('#bH').onclick=()=>setRole('hit');$('#bP').onclick=()=>setRole('pit');
-$('#q').addEventListener('change',e=>{const v=e.target.value.trim().toLowerCase();const hit=G().players.find(p=>p.n.toLowerCase()===v)||G().players.find(p=>p.n.toLowerCase().includes(v));if(hit){st.player[st.role]=hit.n;st.hl=null;draw()}else e.target.value=st.player[st.role]});
+$('#q').addEventListener('change',e=>{const v=e.target.value.trim().toLowerCase();const hit=G().players.find(p=>p.n.toLowerCase()===v)||G().players.find(p=>p.n.toLowerCase().includes(v));if(hit)setPlayer(hit.n);else e.target.value=st.player[st.role]});
 $('#showPlayer').onchange=e=>{st.showPlayer=e.target.checked;drawAging()};
 $('#sameAge').onchange=e=>{st.sameAge=e.target.checked;st.hl=null;drawComps()};
 draw();
