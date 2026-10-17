@@ -176,8 +176,8 @@ function drawAging(){
   const box=$('#agingChart'),svg=$('#agingSvg'),tip=box.querySelector('.tip');tip.hidden=true;
   const W=Math.max(300,box.clientWidth),H=W<560?330:400;
   const m=M(),low=m.better==='low',delta=st.mode==='delta',cv=G().curves[m.k],p=P();
-  // K% always reads low to high; other lower-is-better stats are drawn with better at the top
-  const flip=low&&m.k!=='k';
+  // every axis reads low (bottom) to high (top)
+  const flip=false;
   const ser=st.groups[st.role].filter(g=>cv[String(g)]).map(g=>{const c=cv[String(g)],pk=peakOf(c,low),off=delta?pk.v:0;
     return{g,pk,pts:c.v.map((v,i)=>({a:c.a0+i,v:v-off,lo:c.lo[i]-off,hi:c.hi[i]-off}))}});
   let pl=null;
@@ -275,7 +275,7 @@ function drawComps(){
   const mk=gr.main,mm=M(mk),lowm=mm.better==='low';
   const vals=gr.players.map(x=>x.p[mk][0]),lg=vals.reduce((a,b)=>a+b,0)/vals.length;
   const sorted=vals.slice().sort((a,b)=>a-b),slo=sorted[Math.floor(sorted.length*.03)],shi=sorted[Math.floor(sorted.length*.97)];
-  const spark=f=>{const w=56,h=20,yy=v=>{const t=(Math.max(slo,Math.min(shi,v))-slo)/(shi-slo);return lowm?t*h:h-t*h};const pts=f.map((v,i)=>`${(i/4*w).toFixed(1)},${yy(v).toFixed(1)}`);
+  const spark=f=>{const w=56,h=20,yy=v=>{const t=(Math.max(slo,Math.min(shi,v))-slo)/(shi-slo);return h-t*h};const pts=f.map((v,i)=>`${(i/4*w).toFixed(1)},${yy(v).toFixed(1)}`);
     return`<svg width="${w+4}" height="${h+4}" viewBox="-2 -2 ${w+4} ${h+4}" aria-hidden="true"><line x1="0" x2="${w}" y1="${yy(lg)}" y2="${yy(lg)}" style="stroke:var(--line);stroke-dasharray:2 2"/><polyline points="${pts.join(' ')}" style="fill:none;stroke:var(--accent);stroke-width:1.5"/></svg>`};
   const med=i=>{const v=cs.map(x=>x.c.p[mk][i]).sort((a,b)=>a-b),n=v.length;return n%2?v[(n-1)/2]:(v[n/2-1]+v[n/2])/2};
   const prof=F.filter(f=>f.k!=='sp').map(f=>`${fv(f.k,p.s[F.indexOf(f)])} ${f.label}`).join(' · ');
