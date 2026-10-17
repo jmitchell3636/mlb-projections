@@ -176,6 +176,8 @@ function drawAging(){
   const box=$('#agingChart'),svg=$('#agingSvg'),tip=box.querySelector('.tip');tip.hidden=true;
   const W=Math.max(300,box.clientWidth),H=W<560?330:400;
   const m=M(),low=m.better==='low',delta=st.mode==='delta',cv=G().curves[m.k],p=P();
+  // K% always reads low to high; other lower-is-better stats are drawn with better at the top
+  const flip=low&&m.k!=='k';
   const ser=st.groups[st.role].filter(g=>cv[String(g)]).map(g=>{const c=cv[String(g)],pk=peakOf(c,low),off=delta?pk.v:0;
     return{g,pk,pts:c.v.map((v,i)=>({a:c.a0+i,v:v-off,lo:c.lo[i]-off,hi:c.hi[i]-off}))}});
   let pl=null;
@@ -190,14 +192,14 @@ function drawAging(){
   const ml=W<560?42:50,mr=W<560?10:20,mt=24,mb=38,pw=W-ml-mr,ph=H-mt-mb,barH=ph*.12;
   // reserve space at the bottom of the plot for the sample bars (the bottom is the "worse" end when the axis is flipped)
   const dlo=lo-span*.16,dhi=hi+span*.16;
-  const X=a=>ml+(a-amin)/(amax-amin)*pw,Y=v=>low?mt+(v-lo)/(dhi-lo)*ph:mt+ph-(v-dlo)/(hi-dlo)*ph;
+  const X=a=>ml+(a-amin)/(amax-amin)*pw,Y=v=>flip?mt+(v-lo)/(dhi-lo)*ph:mt+ph-(v-dlo)/(hi-dlo)*ph;
   let g='';
   niceTicks(lo,hi,5).forEach(v=>{g+=`<line class="gl" x1="${ml}" x2="${ml+pw}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${ml-6}" y="${Y(v)+3.5}" text-anchor="end">${fmt(m.k,v,delta)}</text>`});
   if(all){const nmax=Math.max(...all.n);const bw=pw/(amax-amin)*.62;all.n.forEach((n,i)=>{const a=all.a0+i;if(a<amin||a>amax)return;const h=n/nmax*barH;
     g+=`<rect class="nbar" x="${X(a)-bw/2}" y="${mt+ph-h}" width="${bw}" height="${h}" rx="1"/>`})}
   const step=(amax-amin)>16?2:1;for(let a=Math.ceil(amin/step)*step;a<=amax;a+=step)g+=`<text class="ax" x="${X(a)}" y="${mt+ph+15}" text-anchor="middle">${a}</text>`;
   g+=`<text class="axt" x="${ml+pw/2}" y="${H-4}" text-anchor="middle">Age</text>`;
-  g+=`<text class="axt" x="${ml}" y="${mt-10}">${esc(m.label)}${delta?' · change from peak':''}${low?' · up is better':''}</text>`;
+  g+=`<text class="axt" x="${ml}" y="${mt-10}">${esc(m.label)}${delta?' · change from peak':''}${flip?' · up is better':low?' · lower is better':''}</text>`;
   const path=pts=>pts.map((d,i)=>(i?'L':'M')+X(d.a).toFixed(1)+','+Y(d.v).toFixed(1)).join('');
   const area=pts=>pts.map((d,i)=>(i?'L':'M')+X(d.a).toFixed(1)+','+Y(d.hi).toFixed(1)).join('')+pts.slice().reverse().map(d=>'L'+X(d.a).toFixed(1)+','+Y(d.lo).toFixed(1)).join('')+'Z';
   ser.forEach(s=>{g+=`<path d="${area(s.pts)}" style="fill:${gcol(s.g)};opacity:.13"/>`});
