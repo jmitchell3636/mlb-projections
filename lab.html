@@ -83,11 +83,17 @@ td.sim{font:.8rem var(--mono);white-space:nowrap}
 .archkey td:first-child{white-space:nowrap}
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:7px;vertical-align:0}
 .foot{font-size:.85rem;color:var(--muted);max-width:90ch;margin-top:24px}
+#tab-aging,#tab-comps{margin-top:22px}
+.sitenav{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 0 18px;overflow-x:auto}
+.sitenav a{font:600 .95rem var(--body);color:var(--muted);text-decoration:none;padding:9px 12px;border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.sitenav a:hover{color:var(--fg)}
+.sitenav a[aria-current="page"]{color:var(--fg);border-bottom-color:var(--accent)}
+
 </style>
 <div class="wrap">
-<a class="back" href="./">← 2027 MLB Projections</a>
-<h1>Aging Curves &amp; Comps</h1>
-<p class="lede">How the projections age each type of player, and which players project most alike. Everything here comes from the same frozen projections as the main page (October 14, 2026), for every player with at least 100 projected PA or 20 IP in 2027.</p>
+<nav class="sitenav" aria-label="Site"><a href="./">Projections</a><a href="#aging" data-tab="aging">Aging curves</a><a href="#comps" data-tab="comps">Player comps</a></nav>
+<h1 id="pageTitle">Aging Curves</h1>
+<p class="lede" id="pageLede">How the projections age each type of player. Everything here comes from the same frozen projections as the main page (October 14, 2026), for every player with at least 100 projected PA or 20 IP in 2027.</p>
 <div class="rolebar">
   <div class="seg" role="group" aria-label="Players"><button id="bH" aria-pressed="true">Hitters</button><button id="bP" aria-pressed="false">Pitchers</button></div>
   <label class="ctl" for="q" style="flex-direction:row;align-items:center;gap:8px">Player <input id="q" type="search" list="names" placeholder="Search a name" autocomplete="off"></label>
@@ -95,7 +101,7 @@ td.sim{font:.8rem var(--mono);white-space:nowrap}
   <div class="archbadge" id="archBadge" aria-live="polite"></div>
 </div>
 
-<h2>Aging curves</h2>
+<section id="tab-aging">
 <p class="sub">Each line is how one archetype's projected skill changes with age. Bands are 80% ranges from resampling players; grey bars show how many year-to-year changes sit at each age. Drag across the chart to read values.</p>
 <div class="controls">
   <div class="ctl">Stat<div class="seg" id="metricSeg"></div></div>
@@ -106,8 +112,9 @@ td.sim{font:.8rem var(--mono);white-space:nowrap}
 <div class="readout" id="readout"></div>
 <div class="chart" id="agingChart"><svg id="agingSvg" role="img" aria-label="Aging curves"></svg><div class="tip" hidden></div></div>
 <p class="small" id="agingNote"></p>
+</section>
 
-<h2>Comps</h2>
+<section id="tab-comps" hidden>
 <p class="sub">Each dot is a player's 2027 projected profile. Lines join the selected player to his closest matches, and their five-year paths give a check on his own.</p>
 <div class="controls">
   <div class="ctl">Comp pool<label class="check"><input type="checkbox" id="sameAge" checked> Same age only (±1 year)</label></div>
@@ -118,6 +125,7 @@ td.sim{font:.8rem var(--mono);white-space:nowrap}
   <div class="card" id="compList"></div>
 </div>
 <p class="small" id="mapNote"></p>
+</section>
 
 <h2>How archetypes are defined</h2>
 <p class="sub" id="archIntro"></p>
@@ -141,7 +149,8 @@ const gcol=g=>g==='all'?CALL:COL[g];
 // defaults: best player in the first archetype's examples
 ['hit','pit'].forEach(r=>{st.player[r]=L[r].arch[0].examples[0]});
 // deep link: #hit:Name or #pit:Name
-try{const h=decodeURIComponent(location.hash.slice(1));const m=h.match(/^(hit|pit):(.+)$/);if(m){st.role=m[1];st.metric=m[1]==='hit'?'wrc':'fip';if(L[m[1]].players.find(p=>p.n===m[2]))st.player[m[1]]=m[2]}}catch(e){}
+let TAB='aging';
+try{let h=decodeURIComponent(location.hash.slice(1));const t=h.match(/^(aging|comps):?(.*)$/);if(t){TAB=t[1];h=t[2]}const m=h.match(/^(hit|pit):(.+)$/);if(m){st.role=m[1];st.metric=m[1]==='hit'?'wrc':'fip';if(L[m[1]].players.find(p=>p.n===m[2]))st.player[m[1]]=m[2]}}catch(e){}
 const P=()=>G().players.find(p=>p.n===st.player[st.role]);
 // on every player change the aging chart starts from his archetype and all players; others stay one tap away
 function resetGroups(r){const pl=L[r].players.find(x=>x.n===st.player[r]);st.groups[r]=pl?[pl.r,'all']:[0,'all']}
@@ -305,7 +314,17 @@ $('#bH').onclick=()=>setRole('hit');$('#bP').onclick=()=>setRole('pit');
 $('#q').addEventListener('change',e=>{const v=e.target.value.trim().toLowerCase();const hit=G().players.find(p=>p.n.toLowerCase()===v)||G().players.find(p=>p.n.toLowerCase().includes(v));if(hit)setPlayer(hit.n);else e.target.value=st.player[st.role]});
 $('#showPlayer').onchange=e=>{st.showPlayer=e.target.checked;drawAging()};
 $('#sameAge').onchange=e=>{st.sameAge=e.target.checked;st.hl=null;drawComps()};
-draw();
-let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{drawAging();drawComps()},80)}).observe(document.querySelector('.wrap'));
+const LEDE={aging:'How the projections age each type of player.',comps:'Which players project most alike, and how their five-year paths compare.'};
+function showTab(t){TAB=t;$('#tab-aging').hidden=t!=='aging';$('#tab-comps').hidden=t!=='comps';
+  document.querySelectorAll('.sitenav a[data-tab]').forEach(a=>a.toggleAttribute('aria-current',false));
+  const cur=document.querySelector(`.sitenav a[data-tab="${t}"]`);if(cur)cur.setAttribute('aria-current','page');
+  $('#pageTitle').textContent=t==='aging'?'Aging Curves':'Player Comps';
+  $('#pageLede').innerHTML=LEDE[t]+' Everything here comes from the same frozen projections as the main page (October 14, 2026), for every player with at least 100 projected PA or 20 IP in 2027.';
+  document.title=(t==='aging'?'Aging Curves':'Player Comps')+' · 2027 MLB Projections';
+  t==='aging'?drawAging():drawComps()}
+document.querySelectorAll('.sitenav a[data-tab]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();showTab(a.dataset.tab);try{history.replaceState(null,'','#'+a.dataset.tab)}catch(_){}}));
+window.addEventListener('hashchange',()=>{const t=location.hash.slice(1).split(':')[0];if(t==='aging'||t==='comps')showTab(t)});
+draw();showTab(TAB);
+let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{TAB==='aging'?drawAging():drawComps()},80)}).observe(document.querySelector('.wrap'));
 })();
 </script>
