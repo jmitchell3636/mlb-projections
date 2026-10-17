@@ -226,9 +226,9 @@ function drawAging(){
     ser.forEach(s=>{const q=s.pts.find(x=>x.a===a);if(!q)return;d+=`<circle cx="${X(a)}" cy="${Y(q.v)}" r="4" style="fill:${gcol(s.g)}"/>`;
       h+=`<div class="r"><span><i class="sw" style="background:${gcol(s.g)}"></i>${esc(gname(s.g))}</span><span>${fmt(m.k,q.v,delta)}</span></div>`});
     if(pl){const q=pl.pts.find(x=>x.a===a);if(q)h+=`<div class="r"><span><i class="sw" style="background:#2fd0dd"></i>${esc(p.n)} ’${String(YEARS[a-p.a]).slice(2)}</span><span>${fmt(m.k,q.v,delta)}</span></div>`}
-    xd.innerHTML=d;placeTip(tip,box,X(a)*r.width/W,ev.clientY-r.top)}
+    xd.innerHTML=d;tip.innerHTML=h;placeTip(tip,box,X(a)*r.width/W,ev.clientY-r.top)}
   hov.addEventListener('pointermove',move);hov.addEventListener('pointerdown',move);
-  hov.addEventListener('pointerleave',()=>{tip.hidden=true;xh.setAttribute('visibility','hidden');xd.innerHTML=''});
+  hov.addEventListener('pointerleave',ev=>{if(ev.pointerType!=='mouse')return;tip.hidden=true;xh.setAttribute('visibility','hidden');xd.innerHTML=''});
   // readout
   const g0=ser[0];let ro='';
   if(g0){const c=cv[String(g0.g)],pk=g0.pk,at=a=>{const i=a-c.a0;return i>=0&&i<c.v.length?c.v[i]-pk.v:null};
@@ -269,7 +269,7 @@ function drawComps(){
   function show(ev){const t=ev.target;if(t.dataset.i===undefined){tip.hidden=true;return}const c=gr.players[+t.dataset.i],r=svg.getBoundingClientRect(),cm=cs.find(x=>x.c===c);
     tip.innerHTML=`<div class="h">${esc(c.n)}</div><div style="opacity:.7;margin-bottom:3px">Age ${c.a} · ${esc(gr.arch[c.r].name)}${c.role?' · '+c.role:''}</div>`+F.filter(f=>f.k!=='sp').map((f,i)=>`<div class="r"><span>${esc(f.label)}</span><span>${fv(f.k,c.s[F.indexOf(f)])}</span></div>`).join('')+(cm?`<div class="r" style="color:#ff9aa2;margin-top:2px"><span>Match</span><span>${simOf(cm.d).toFixed(1)}</span></div>`:'');
     placeTip(tip,box,(+t.getAttribute('cx'))*r.width/W,(+t.getAttribute('cy'))*r.height/H)}
-  svg.onpointermove=show;svg.onpointerdown=e=>{show(e);const t=e.target;if(t.dataset.i!==undefined){const c=gr.players[+t.dataset.i];if(!set.has(c))setPlayer(c.n)}};svg.onpointerleave=()=>{tip.hidden=true};
+  svg.onpointermove=show;svg.onpointerdown=e=>{show(e);const t=e.target;if(t.dataset.i!==undefined){const c=gr.players[+t.dataset.i];if(!set.has(c))setPlayer(c.n)}};svg.onpointerleave=ev=>{if(ev.pointerType==='mouse')tip.hidden=true};
   // list
   if(!p){$('#compList').innerHTML='<div class="small">Pick a player to see his comps.</div>';return}
   const mk=gr.main,mm=M(mk),lowm=mm.better==='low';
