@@ -97,6 +97,10 @@ table{font-size:.8rem}th,td{padding:6px 5px}
 .bk-bar{flex:1;height:5px;background:var(--chip);border-radius:3px;overflow:hidden;min-width:40px}
 .bk-bar i{display:block;height:100%}.bk-bar i.up{background:#2c7a4b}.bk-bar i.dn{background:var(--bad)}
 .bk-why{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
+.bk-why span.on{background:var(--accent);color:#fff}
+.bk-search{max-width:240px}.bk-search span{color:var(--muted)}
+.bk-find{margin:4px 0 12px;max-width:620px}.bk-find .bk-row{border-color:var(--accent);border-width:2px}.bk-where{margin:6px 0 0}
+.bk-h2{margin:26px 0 6px}
 .bk-why span{font-size:.74rem;color:var(--muted);background:var(--chip);border-radius:999px;padding:2px 8px}
 .cmp-head{margin-bottom:6px}
 .cmp-pick{display:grid;grid-template-columns:auto repeat(3,minmax(0,1fr));gap:10px;align-items:center;margin:12px 0 14px}
@@ -183,12 +187,20 @@ table{font-size:.8rem}th,td{padding:6px 5px}
 <p class="lede">Who the model expects to improve or decline most in 2027 compared with his 2026 season.</p>
 <div class="cmp-filters">
   <div class="seg" role="group" aria-label="Players"><button id="bkH" type="button" aria-pressed="true">Hitters</button><button id="bkP" type="button" aria-pressed="false">Pitchers</button></div>
+  <div class="cmp-yrbar" id="bkRoleWrap" hidden><span class="cmp-yrl">Role</span><div class="cmp-stats" id="bkRole" role="group" aria-label="Pitcher role"><button type="button" data-r="sp" aria-pressed="true">Starters</button><button type="button" data-r="rp">Relievers</button><button type="button" data-r="all">All</button></div></div>
   <div class="cmp-yrbar"><span class="cmp-yrl">Show</span><div class="cmp-stats" id="bkN" role="group" aria-label="How many"><button type="button" data-n="10">Top 10</button><button type="button" data-n="25" aria-pressed="true">Top 25</button><button type="button" data-n="50">Top 50</button></div></div>
+  <div class="cmp-yrbar"><span class="cmp-yrl">Reason</span><div class="cmp-stats" id="bkWhy" role="group" aria-label="Reason"></div></div>
+  <label class="cmp-in bk-search" for="bkQ"><span aria-hidden="true">⌕</span><input id="bkQ" type="search" list="bknames" placeholder="Find a player" autocomplete="off" aria-label="Find a player"></label>
 </div>
+<datalist id="bknames"></datalist>
+<div id="bkFind" class="bk-find" hidden></div>
 <div class="bk-grid">
   <div class="bk-col"><h2 class="bk-h up">▲ Breakouts</h2><p class="small" id="bkUpSub"></p><ol class="bk-list" id="bkUp"></ol></div>
   <div class="bk-col"><h2 class="bk-h dn">▼ Letdowns</h2><p class="small" id="bkDnSub"></p><ol class="bk-list" id="bkDn"></ol></div>
 </div>
+<h2 class="bk-h2">Everyone at once</h2>
+<div class="cmp-chart" id="bkChart"><svg id="bkSvg" role="img" aria-label="2026 actual vs 2027 projected"></svg><div class="cmp-tip" hidden></div></div>
+<p class="small" id="bkChartNote"></p>
 <p class="small" id="bkNote"></p>
 <p class="small">2026 stats from <a href="https://baseballsavant.mlb.com/">Baseball Savant</a>. Projections are the frozen October 14, 2026 numbers. Tap a name to open his projection.</p>
 </section>
@@ -430,38 +442,101 @@ const BRK={"hit":[{"n":"Bobby Witt Jr.","a":27,"pa26":632,"v26":0.345,"x26":0.37
 (function(){
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const bs={role:'hit',n:25};
+const UP='#2c7a4b',DN='#b23a2e';
+const bs={role:'hit',n:25,prole:'sp',why:'all',q:''};
 const f3=v=>v.toFixed(3).replace(/^0/,'');
-function list(rows,up){
-  const hit=bs.role==='hit';const max=Math.max(...rows.map(r=>Math.abs(r.d)));
-  return rows.map((r,i)=>{const stat=hit?`wOBA ${f3(r.v26)} → <b>${f3(r.v27)}</b>`:`FIP ${r.v26.toFixed(2)} → <b>${r.v27.toFixed(2)}</b>`;
-    const chg=hit?(r.d>0?'+':'−')+Math.abs(Math.round(r.d)):(r.d>0?'−':'+')+Math.abs(r.d).toFixed(2);
-    const meta=hit?`Age ${r.a} · ${r.pa26} PA in 2026`:`Age ${r.a} · ${({SP:'SP',CL:'Closer',SU:'Setup',MID:'RP'})[r.role]||r.role} · ${r.ip26} IP in 2026`;
-    return `<li class="bk-row"><span class="bk-rk">${i+1}</span><div class="bk-main">
-      <div class="bk-top"><a href="#" class="bk-name" data-n="${esc(r.n)}">${esc(r.n)}</a><span class="bk-chg ${up?'up':'dn'}">${chg}</span></div>
-      <div class="bk-meta">${meta}</div>
-      <div class="bk-stat">${stat}<span class="bk-bar"><i class="${up?'up':'dn'}" style="width:${(100*Math.abs(r.d)/max).toFixed(0)}%"></i></span></div>
-      ${r.why.length?`<div class="bk-why">${r.why.map(w=>`<span>${esc(w)}</span>`).join('')}</div>`:''}</div></li>`}).join('');
+const WHY=[['all','All reasons'],['luck','Luck'],['track','Track record'],['velo','Velocity'],['age','Age']];
+const cat=w=>/^(Unlucky|Lucky)/.test(w)?'luck':/^(Down year|Career year)/.test(w)?'track':/^Fastball/.test(w)?'velo':/^Age/.test(w)?'age':'other';
+const isSP=r=>r.role==='SP';
+function pool(){let rows=BRK[bs.role];
+  if(bs.role==='pit'&&bs.prole!=='all')rows=rows.filter(r=>bs.prole==='sp'?isSP(r):!isSP(r));
+  return rows}
+function filt(rows){return bs.why==='all'?rows:rows.filter(r=>r.why.some(w=>cat(w)===bs.why))}
+const hitR=()=>bs.role==='hit';
+const statTxt=r=>hitR()?`wOBA ${f3(r.v26)} → <b>${f3(r.v27)}</b>`:`FIP ${r.v26.toFixed(2)} → <b>${r.v27.toFixed(2)}</b>`;
+const chgTxt=r=>hitR()?(r.d>0?'+':'−')+Math.abs(Math.round(r.d)):(r.d>0?'−':'+')+Math.abs(r.d).toFixed(2);
+const metaTxt=r=>hitR()?`Age ${r.a} · ${r.pa26} PA in 2026`:`Age ${r.a} · ${({SP:'SP',CL:'Closer',SU:'Setup',MID:'RP'})[r.role]||r.role} · ${r.ip26} IP in 2026`;
+function card(r,i,up,max){return `<li class="bk-row"><span class="bk-rk">${i+1}</span><div class="bk-main">
+  <div class="bk-top"><a href="#" class="bk-name" data-n="${esc(r.n)}">${esc(r.n)}</a><span class="bk-chg ${up?'up':'dn'}">${chgTxt(r)}</span></div>
+  <div class="bk-meta">${metaTxt(r)}</div>
+  <div class="bk-stat">${statTxt(r)}<span class="bk-bar"><i class="${up?'up':'dn'}" style="width:${(100*Math.abs(r.d)/max).toFixed(0)}%"></i></span></div>
+  ${r.why.length?`<div class="bk-why">${r.why.map(w=>`<span class="${bs.why!=='all'&&cat(w)===bs.why?'on':''}">${esc(w)}</span>`).join('')}</div>`:''}</div></li>`}
+function controls(){
+  $('#bkH').setAttribute('aria-pressed',hitR());$('#bkP').setAttribute('aria-pressed',!hitR());
+  $('#bkRoleWrap').hidden=hitR();
+  $('#bkRole').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.r===bs.prole));
+  $('#bkN').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.n===bs.n));
+  const opts=WHY.filter(([k])=>k!=='velo'||!hitR());if(hitR()&&bs.why==='velo')bs.why='all';
+  $('#bkWhy').innerHTML=opts.map(([k,l])=>`<button type="button" data-w="${k}" aria-pressed="${k===bs.why}">${l}</button>`).join('');
+  $('#bkWhy').querySelectorAll('button').forEach(b=>b.onclick=()=>{bs.why=b.dataset.w;draw()});
+  $('#bknames').innerHTML=BRK[bs.role].map(r=>`<option value="${esc(r.n)}">`).join('');
+}
+function lookup(all){
+  const box=$('#bkFind');const q=bs.q.trim().toLowerCase();if(!q){box.hidden=true;return null}
+  const r=all.find(x=>x.n.toLowerCase()===q)||all.find(x=>x.n.toLowerCase().includes(q));
+  if(!r){const any=BRK[bs.role].find(x=>x.n.toLowerCase().includes(q));
+    box.hidden=false;box.innerHTML=any&&bs.role==='pit'?`<p class="small">${esc(any.n)} is a ${isSP(any)?'starter':'reliever'}. Switch the filter above to see him.</p>`
+      :`<p class="small">No match among players who qualify (${hitR()?'300+ PA in 2026 and 2027':'50+ IP in 2026, 40+ projected'}).</p>`;return null}
+  const sorted=all.slice().sort((a,b)=>b.d-a.d);const rk=sorted.indexOf(r)+1,n=sorted.length,up=r.d>0;
+  const where=up?`#${rk} of ${n} by projected improvement`:`#${n-rk+1} of ${n} by projected decline`;
+  box.hidden=false;box.innerHTML=`<ol class="bk-list">${card(r,0,up,Math.abs(r.d)||1)}</ol><p class="small bk-where">${esc(r.n)}: ${Math.abs(r.d)<(hitR()?5:0.1)?'about the same as 2026':(up?'projected to improve':'projected to decline')}, ${where}.</p>`;
+  box.querySelector('.bk-rk').textContent='';
+  return r}
+function scatter(all,ups,dns,found){
+  const box=$('#bkChart'),svg=$('#bkSvg'),tip=box.querySelector('.cmp-tip');tip.hidden=true;
+  const W=Math.max(300,box.clientWidth-12),H=Math.min(420,Math.max(280,W*.55)),hit=hitR();
+  const xs=all.map(r=>r.v26),ys=all.map(r=>r.v27);
+  let lo=Math.min(...xs,...ys),hi=Math.max(...xs,...ys);
+  if(hit){lo=Math.max(lo,.2);hi=Math.min(hi,.46)}else{lo=Math.max(lo,1);hi=Math.min(hi,6.5)}
+  const pad=(hi-lo)*.04;lo-=pad;hi+=pad;
+  const ml=44,mr=12,mt=14,mb=34,pw=W-ml-mr,ph=H-mt-mb;
+  const X=v=>ml+(Math.max(lo,Math.min(hi,v))-lo)/(hi-lo)*pw,Y=v=>mt+ph-(Math.max(lo,Math.min(hi,v))-lo)/(hi-lo)*ph;
+  const tk=hit?[.25,.30,.35,.40,.45]:[2,3,4,5,6];const fm=v=>hit?f3(v):v.toFixed(0);
+  let g='';tk.filter(v=>v>=lo&&v<=hi).forEach(v=>{g+=`<line x1="${ml}" x2="${ml+pw}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${ml-6}" y="${Y(v)+4}" text-anchor="end" font-size="10" fill="var(--muted)">${fm(v)}</text><text x="${X(v)}" y="${mt+ph+14}" text-anchor="middle" font-size="10" fill="var(--muted)">${fm(v)}</text>`});
+  g+=`<line x1="${X(lo)}" y1="${Y(lo)}" x2="${X(hi)}" y2="${Y(hi)}" stroke="var(--muted)" stroke-dasharray="4 4"/>`;
+  g+=`<text x="${ml+pw/2}" y="${H-4}" text-anchor="middle" font-size="10" fill="var(--muted)">2026 ${hit?'wOBA':'FIP'} (actual)</text><text transform="translate(11 ${mt+ph/2}) rotate(-90)" text-anchor="middle" font-size="10" fill="var(--muted)">2027 ${hit?'wOBA':'FIP'} (projected)</text>`;
+  const up=new Set(ups.map(r=>r.n)),dn=new Set(dns.map(r=>r.n));
+  const order=all.slice().sort((a,b)=>(up.has(a.n)||dn.has(a.n))-(up.has(b.n)||dn.has(b.n)));
+  order.forEach((r,i)=>{const c=up.has(r.n)?UP:dn.has(r.n)?DN:'var(--muted)';const hl=up.has(r.n)||dn.has(r.n);
+    g+=`<circle data-i="${all.indexOf(r)}" cx="${X(r.v26).toFixed(1)}" cy="${Y(r.v27).toFixed(1)}" r="${hl?4:3}" fill="${c}" opacity="${hl?.9:.3}" style="cursor:pointer"/>`});
+  if(found){const fx=X(found.v26),fy=Y(found.v27);g+=`<circle cx="${fx}" cy="${fy}" r="9" fill="none" stroke="var(--fg)" stroke-width="2"/><text x="${fx+12}" y="${fy+4}" font-size="11" font-weight="600" fill="var(--fg)" style="font-family:var(--body)">${esc(found.n)}</text>`}
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('height',H);svg.innerHTML=g;
+  const show=e=>{const t=e.target;if(t.dataset.i===undefined){tip.hidden=true;return}const r=all[+t.dataset.i],rb=svg.getBoundingClientRect();
+    tip.innerHTML=`<div class="h">${esc(r.n)}</div><div class="r"><span>2026</span><span>${hit?f3(r.v26):r.v26.toFixed(2)}</span></div><div class="r"><span>2027 proj.</span><span>${hit?f3(r.v27):r.v27.toFixed(2)}</span></div><div class="r"><span>Change</span><span>${chgTxt(r)}</span></div>`;
+    tip.hidden=false;const px=+t.getAttribute('cx')*rb.width/W,py=+t.getAttribute('cy')*rb.height/H;let l=px+12;if(l+tip.offsetWidth>box.clientWidth)l=px-tip.offsetWidth-12;tip.style.left=Math.max(4,l)+'px';tip.style.top=Math.max(4,py-30)+'px'};
+  svg.onpointermove=show;svg.onpointerleave=e=>{if(e.pointerType==='mouse')tip.hidden=true};
+  let last=null;
+  svg.onclick=e=>{const t=e.target;if(t.dataset.i===undefined)return;const r=all[+t.dataset.i];
+    if(matchMedia('(hover: hover)').matches||last===r.n){window.goProj&&window.goProj(bs.role,r.n)}else{last=r.n;show(e)}};
+  $('#bkChartNote').textContent=hit?'Each dot is a player. Above the dashed line: projected to hit better than in 2026; below it: worse. Green and red dots are the players in the lists. Click a dot (tap twice on a phone) to open his projection.'
+    :'Each dot is a pitcher. Below the dashed line: projected FIP lower (better) than in 2026; above it: higher. Green and red dots are the players in the lists. Click a dot (tap twice on a phone) to open his projection.';
 }
 function draw(){
-  $('#bkH').setAttribute('aria-pressed',bs.role==='hit');$('#bkP').setAttribute('aria-pressed',bs.role==='pit');
-  $('#bkN').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.n===bs.n));
-  const rows=BRK[bs.role].slice();const hit=bs.role==='hit';
-  const ups=rows.filter(r=>r.d>0).sort((a,b)=>b.d-a.d).slice(0,bs.n),dns=rows.filter(r=>r.d<0).sort((a,b)=>a.d-b.d).slice(0,bs.n);
+  controls();
+  const all=pool(),hit=hitR(),rows=filt(all);
+  const ups=rows.filter(r=>hit?r.d>0:r.d>0).sort((a,b)=>b.d-a.d).slice(0,bs.n),dns=rows.filter(r=>r.d<0).sort((a,b)=>a.d-b.d).slice(0,bs.n);
+  const mu=Math.max(...ups.map(r=>Math.abs(r.d)),1e-9),md=Math.max(...dns.map(r=>Math.abs(r.d)),1e-9);
   $('#bkUpSub').textContent=hit?'Biggest projected wOBA gain over 2026':'Biggest projected FIP improvement over 2026';
   $('#bkDnSub').textContent=hit?'Biggest projected wOBA drop from 2026':'Biggest projected FIP jump from 2026';
-  $('#bkUp').innerHTML=list(ups,true);$('#bkDn').innerHTML=list(dns,false);
+  $('#bkUp').innerHTML=ups.length?ups.map((r,i)=>card(r,i,true,mu)).join(''):'<li class="small">No players match this filter.</li>';
+  $('#bkDn').innerHTML=dns.length?dns.map((r,i)=>card(r,i,false,md)).join(''):'<li class="small">No players match this filter.</li>';
+  const found=lookup(all);
+  scatter(all,ups,dns,found);
   document.querySelectorAll('#viewBrk .bk-name').forEach(a=>a.onclick=e=>{e.preventDefault();window.goProj&&window.goProj(bs.role,a.dataset.n)});
   $('#bkNote').textContent=hit
-    ?`Hitters with 300+ PA in 2026 and 300+ projected PA in 2027 (${rows.length} players). Change is in points of wOBA. Reasons are the signals behind the move: luck (2026 wOBA vs expected wOBA from contact quality), how 2026 compares with 2024–25, and age.`
-    :`Pitchers with 50+ IP in 2026 and 40+ projected IP in 2027 (${rows.length} players). Lower FIP is better. Reasons: luck (wOBA allowed vs expected), how 2026 compares with 2024–25, fastball velocity change from 2025, and age.`;
+    ?`Hitters with 300+ PA in 2026 and 300+ projected PA in 2027 (${all.length} players). Change is in points of wOBA. Reasons are the signals behind the move: luck (2026 wOBA vs expected wOBA from contact quality), how 2026 compares with 2024–25, and age.`
+    :`${bs.prole==='sp'?'Starters':bs.prole==='rp'?'Relievers':'Pitchers'} with 50+ IP in 2026 and 40+ projected IP in 2027 (${all.length} players). Lower FIP is better. Reasons: luck (wOBA allowed vs expected), how 2026 compares with 2024–25, fastball velocity change from 2025, and age.${bs.prole!=='sp'?' Relievers swing the most because their seasons are short.':''}`;
 }
-$('#bkH').onclick=()=>{bs.role='hit';draw()};$('#bkP').onclick=()=>{bs.role='pit';draw()};
+$('#bkH').onclick=()=>{bs.role='hit';bs.q='';$('#bkQ').value='';draw()};$('#bkP').onclick=()=>{bs.role='pit';bs.q='';$('#bkQ').value='';draw()};
+$('#bkRole').querySelectorAll('button').forEach(b=>b.onclick=()=>{bs.prole=b.dataset.r;draw()});
 $('#bkN').querySelectorAll('button').forEach(b=>b.onclick=()=>{bs.n=+b.dataset.n;draw()});
+$('#bkQ').addEventListener('change',e=>{bs.q=e.target.value;draw()});
+$('#bkQ').addEventListener('input',e=>{if(!e.target.value){bs.q='';draw()}});
 function route(){const on=location.hash.slice(1).startsWith('breakouts');$('#viewBrk').hidden=!on;
   $('#navBrk').toggleAttribute('aria-current',on);if(on){$('#navBrk').setAttribute('aria-current','page');document.title='Breakouts & Letdowns · 2027 MLB Projections';draw()}}
 $('#navBrk').addEventListener('click',e=>{e.preventDefault();location.hash='breakouts'});
 window.addEventListener('hashchange',route);route();
+let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{if(!$('#viewBrk').hidden)draw()},100)}).observe(document.querySelector('.wrap'));
 })();
 
 </script>
