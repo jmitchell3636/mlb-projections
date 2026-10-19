@@ -104,7 +104,9 @@ table{font-size:.8rem}th,td{padding:6px 5px}
 .cmp-chart svg{display:block;width:100%;font-family:var(--mono)}
 .cmp-tip{position:absolute;pointer-events:none;background:#0d1a2e;color:#eef2f8;border-radius:5px;padding:8px 10px;font:12px/1.45 var(--mono);min-width:150px;box-shadow:0 6px 18px rgba(13,26,46,.25);z-index:3}
 .cmp-tip .r{display:flex;justify-content:space-between;gap:12px}.cmp-tip .h{font:600 13px var(--body);margin-bottom:3px}
-.cmp-tbl{margin-top:16px;max-height:none}
+.cmp-yrbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:18px}.cmp-yrbar .cmp-stats{margin:0}
+.cmp-yrl{font:600 .72rem var(--body);text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.cmp-tbl{margin-top:8px;max-height:none}
 .cmp-tbl table{font-size:.86rem}
 .cmp-tbl th,.cmp-tbl td{cursor:default;white-space:nowrap}
 .cmp-tbl tbody tr{cursor:default}.cmp-tbl tbody tr:hover{background:none}
@@ -162,6 +164,7 @@ table{font-size:.8rem}th,td{padding:6px 5px}
 <div class="cmp-stats" id="cstats" role="group" aria-label="Stat"></div>
 <div class="cmp-chart" id="cchart"><svg id="csvg" role="img" aria-label="Five-year comparison"></svg><div class="cmp-tip" hidden></div></div>
 <p class="small" id="cnote"></p>
+<div class="cmp-yrbar"><span class="cmp-yrl">Season</span><div class="cmp-stats" id="cyears" role="group" aria-label="Season"></div></div>
 <div class="tablewrap cmp-tbl"><table id="ctbl"></table></div>
 <p class="small">Projected WAR includes injury and role risk. Full-season WAR assumes a healthy year. Bold is the best in each row.</p>
 </section>
@@ -261,7 +264,7 @@ const COLS=['#1f4e8c','#c2410c','#2c8a66'];
 const MET={hit:[['WAR','WAR','Projected WAR','WAR_lo','WAR_hi',1,1],['WAR_ft','Full-season WAR','Full-season WAR','WAR_ft_lo','WAR_ft_hi',1,1],['wOBA','wOBA','wOBA','wOBA_slo','wOBA_shi',3,1],['wRC+','wRC+','wRC+',null,null,0,1],['HR','HR','Home runs',null,null,0,1],['PA','PA','Plate appearances',null,null,0,1]],
            pit:[['WAR','WAR','Projected WAR','WAR_lo','WAR_hi',1,1],['WAR_ft','Full-season WAR','Full-season WAR','WAR_ft_lo','WAR_ft_hi',1,1],['FIP','FIP','FIP','FIP_slo','FIP_shi',2,-1],['K%','K%','Strikeout rate',null,null,'%',1],['BB%','BB%','Walk rate',null,null,'%',-1],['IP','IP','Innings',null,null,0,1]]};
 const DEF={hit:['Juan Soto','Aaron Judge','Bobby Witt Jr.'],pit:['Tarik Skubal','Paul Skenes','Garrett Crochet']};
-const cs={role:'hit',names:{hit:[],pit:[]},metric:{hit:'WAR',pit:'WAR'},focus:null};
+const cs={role:'hit',names:{hit:[],pit:[]},metric:{hit:'WAR',pit:'WAR'},focus:null,year:2027};
 const byName=r=>{const m={};R[r].forEach(x=>{(m[x.name]=m[x.name]||[]).push(x)});Object.values(m).forEach(a=>a.sort((p,q)=>p.season-q.season));return m};
 const IDX={hit:byName('hit'),pit:byName('pit')};
 ['hit','pit'].forEach(r=>{cs.names[r]=DEF[r].filter(n=>IDX[r][n]);
@@ -322,16 +325,19 @@ function chart(){
 }
 function table(){
   const ps=players();if(!ps.length){$('#ctbl').innerHTML='';return}
-  const hit=cs.role==='hit',r0=p=>p.rows[0];
+  const hit=cs.role==='hit',r0=p=>p.rows.find(r=>r.season===cs.year)||p.rows[0];
+  const yrs=ps[0].rows.map(r=>r.season);
+  $('#cyears').innerHTML=yrs.map(y=>`<button type="button" data-y="${y}" aria-pressed="${y===cs.year}">${y}</button>`).join('');
+  $('#cyears').querySelectorAll('button').forEach(b=>b.onclick=()=>{cs.year=+b.dataset.y;table()});
   const G=hit?[
     ['2027–2031',[['Projected WAR',p=>sum(p,'WAR'),1,1],['Full-season WAR',p=>sum(p,'WAR_ft'),1,1]]],
-    ['2027',[['WAR',p=>r0(p).WAR,1,1],['PA',p=>r0(p).PA,0,1],['AVG',p=>r0(p).AVG,3,1],['OBP',p=>r0(p).OBP,3,1],['SLG',p=>r0(p).SLG,3,1],['HR',p=>r0(p).HR,0,1],['SB',p=>r0(p).SB,0,1],['wRC+',p=>r0(p)['wRC+'],0,1],['Defense (runs)',p=>r0(p)['Fld+Pos'],1,1]]]]
+    [String(cs.year),[['Age',p=>r0(p).age,0,0],['WAR',p=>r0(p).WAR,1,1],['PA',p=>r0(p).PA,0,1],['AVG',p=>r0(p).AVG,3,1],['OBP',p=>r0(p).OBP,3,1],['SLG',p=>r0(p).SLG,3,1],['HR',p=>r0(p).HR,0,1],['SB',p=>r0(p).SB,0,1],['wRC+',p=>r0(p)['wRC+'],0,1],['Defense (runs)',p=>r0(p)['Fld+Pos'],1,1]]]]
    :[['2027–2031',[['Projected WAR',p=>sum(p,'WAR'),1,1],['Full-season WAR',p=>sum(p,'WAR_ft'),1,1]]],
-    ['2027',[['WAR',p=>r0(p).WAR,1,1],['IP',p=>r0(p).IP,0,1],['K%',p=>r0(p)['K%'],'%',1],['BB%',p=>r0(p)['BB%'],'%',-1],['HR/9',p=>r0(p)['HR/9'],2,-1],['FIP',p=>r0(p).FIP,2,-1],['WHIP',p=>r0(p).WHIP,2,-1]]]];
+    [String(cs.year),[['Age',p=>r0(p).age,0,0],['WAR',p=>r0(p).WAR,1,1],['IP',p=>r0(p).IP,0,1],['K%',p=>r0(p)['K%'],'%',1],['BB%',p=>r0(p)['BB%'],'%',-1],['HR/9',p=>r0(p)['HR/9'],2,-1],['FIP',p=>r0(p).FIP,2,-1],['WHIP',p=>r0(p).WHIP,2,-1]]]];
   let h=`<thead><tr><th></th>${ps.map(p=>`<th><span style="color:${COLS[p.i]}">●</span> ${esc(last(p.n))}</th>`).join('')}</tr></thead><tbody>`;
   G.forEach(([gname,rows])=>{h+=`<tr class="grp"><td colspan="${ps.length+1}">${gname}</td></tr>`;
     rows.forEach(([lab,fn,dec,dir])=>{const vals=ps.map(fn);let best=-1;
-      if(ps.length>1){const nums=vals.map(Number);const b=dir>0?Math.max(...nums):Math.min(...nums);if(nums.filter(x=>x===b).length===1)best=nums.indexOf(b)}
+      if(ps.length>1&&dir){const nums=vals.map(Number);const b=dir>0?Math.max(...nums):Math.min(...nums);if(nums.filter(x=>x===b).length===1)best=nums.indexOf(b)}
       h+=`<tr><td>${lab}</td>${vals.map((v,j)=>`<td class="${j===best?'best':''}">${fv(v,dec)}</td>`).join('')}</tr>`})});
   $('#ctbl').innerHTML=h+'</tbody>';
 }
