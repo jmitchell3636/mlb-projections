@@ -96,15 +96,25 @@ table{font-size:.8rem}th,td{padding:6px 5px}
 .cmp-card .big{font:700 1.9rem/1.05 var(--display);font-variant-numeric:tabular-nums;margin-top:4px}
 .cmp-card .lbl{font:600 .68rem var(--body);text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
 .cmp-card .short{display:none}
+.cmp-card .go{font:600 .74rem var(--body);color:var(--accent);margin-top:6px}
+.cmp-card:hover{border-color:var(--c)}.cmp-card:hover .go{text-decoration:underline}
+#cnote{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+#cnote .rng{display:inline-flex;align-items:center;gap:6px;font:600 .8rem var(--body);color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px 10px;cursor:pointer}
+#cnote .rng i{width:9px;height:9px;border-radius:50%;background:var(--c)}
+#cnote .rng[aria-pressed="true"]{background:var(--c);border-color:var(--c);color:#fff}#cnote .rng[aria-pressed="true"] i{background:#fff}
+.cmp-tbl a.plink{color:inherit;text-decoration:none}.cmp-tbl a.plink:hover{text-decoration:underline}
 @media (max-width:520px){.cmp-card .full{display:none}.cmp-card .short{display:inline}.cmp-card{padding:8px}.cmp-card .nm{font-size:1rem}.cmp-card .big{font-size:1.5rem}.cmp-card .meta{font-size:.68rem}}
-.cmp-stats{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.cmp-stats{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+.cmp-chart{margin-top:4px}
 .cmp-stats button{font:600 .82rem var(--body);color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 12px;cursor:pointer}
 .cmp-stats button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
 .cmp-chart{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 6px 2px;min-width:0;touch-action:pan-y}
 .cmp-chart svg{display:block;width:100%;font-family:var(--mono)}
 .cmp-tip{position:absolute;pointer-events:none;background:#0d1a2e;color:#eef2f8;border-radius:5px;padding:8px 10px;font:12px/1.45 var(--mono);min-width:150px;box-shadow:0 6px 18px rgba(13,26,46,.25);z-index:3}
 .cmp-tip .r{display:flex;justify-content:space-between;gap:12px}.cmp-tip .h{font:600 13px var(--body);margin-bottom:3px}
-.cmp-yrbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:18px}.cmp-yrbar .cmp-stats{margin:0}
+.cmp-filters{display:flex;flex-wrap:wrap;gap:8px 28px;margin:0 0 12px}
+.cmp-yrbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.cmp-yrl{min-width:44px}.cmp-yrbar .cmp-stats{margin:0}
 .cmp-yrl{font:600 .72rem var(--body);text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
 .cmp-tbl{margin-top:8px;max-height:none}
 .cmp-tbl table{font-size:.86rem}
@@ -160,11 +170,11 @@ table{font-size:.8rem}th,td{padding:6px 5px}
   <label class="cmp-in" for="cq2"><i style="background:#2c8a66"></i><input id="cq2" type="search" list="cnames" placeholder="Add a player" autocomplete="off" aria-label="Player 3"></label>
 </div>
 <datalist id="cnames"></datalist>
+<div class="cmp-filters"><div class="cmp-yrbar"><span class="cmp-yrl">Season</span><div class="cmp-stats" id="cyears" role="group" aria-label="Season"></div></div>
+<div class="cmp-yrbar"><span class="cmp-yrl">Stat</span><div class="cmp-stats" id="cstats" role="group" aria-label="Stat"></div></div></div>
 <div class="cmp-cards" id="ccards"></div>
-<div class="cmp-stats" id="cstats" role="group" aria-label="Stat"></div>
 <div class="cmp-chart" id="cchart"><svg id="csvg" role="img" aria-label="Five-year comparison"></svg><div class="cmp-tip" hidden></div></div>
 <p class="small" id="cnote"></p>
-<div class="cmp-yrbar"><span class="cmp-yrl">Season</span><div class="cmp-stats" id="cyears" role="group" aria-label="Season"></div></div>
 <div class="tablewrap cmp-tbl"><table id="ctbl"></table></div>
 <p class="small">Projected WAR includes injury and role risk. Full-season WAR assumes a healthy year. Bold is the best in each row.</p>
 </section>
@@ -284,15 +294,18 @@ function controls(){
   $('#cstats').querySelectorAll('button').forEach(b=>b.onclick=()=>{cs.metric[cs.role]=b.dataset.k;controls();cards();chart()});
 }
 const TOTAL=new Set(['WAR','WAR_ft','HR','PA','IP']);
-function cardVal(p){const k=cs.metric[cs.role];if(TOTAL.has(k))return sum(p,k);
-  const w=cs.role==='hit'?'PA':'IP';const tw=sum(p,w);return tw?p.rows.reduce((a,r)=>a+r[k]*(r[w]||0),0)/tw:p.rows[0][k]}
+const yrRow=p=>p.rows.find(r=>r.season===cs.year)||p.rows[0];
+function cardVal(p){return yrRow(p)[cs.metric[cs.role]]}
 function cards(){
   const ps=players(),hit=cs.role==='hit',m=MET[cs.role].find(x=>x[0]===cs.metric[cs.role]);
-  $('#ccards').innerHTML=ps.map(p=>{const r=p.rows[0];const role=hit?'':({SP:'SP',CL:'Closer',SU:'Setup',MID:'RP'})[r.role]||'';
-    return `<button class="cmp-card" type="button" data-i="${p.i}" aria-pressed="${cs.focus===p.i}" style="--c:${COLS[p.i]}">
-      <span class="nm"><span class="full">${esc(p.n)}</span><span class="short">${esc(last(p.n))}</span></span><span class="meta">Age ${r.age}<span class="full"> in 2027</span>${role?' · '+role:''}</span>
-      <span class="big">${fv(cardVal(p),m[5])}</span><span class="lbl">${esc(m[2])}, 2027–31${TOTAL.has(m[0])?' total':' avg'}</span></button>`}).join('');
-  $('#ccards').querySelectorAll('.cmp-card').forEach(c=>c.onclick=()=>{const i=+c.dataset.i;cs.focus=cs.focus===i?null:i;cards();chart()});
+  const yrs=ps.length?ps[0].rows.map(r=>r.season):[2027,2028,2029,2030,2031];
+  $('#cyears').innerHTML=yrs.map(y=>`<button type="button" data-y="${y}" aria-pressed="${y===cs.year}">${y}</button>`).join('');
+  $('#cyears').querySelectorAll('button').forEach(b=>b.onclick=()=>{cs.year=+b.dataset.y;cards();chart();table()});
+  $('#ccards').innerHTML=ps.map(p=>{const r=yrRow(p);const role=hit?'':({SP:'SP',CL:'Closer',SU:'Setup',MID:'RP'})[r.role]||'';
+    return `<button class="cmp-card" type="button" data-n="${esc(p.n)}" title="Open ${esc(p.n)}'s projection" style="--c:${COLS[p.i]}">
+      <span class="nm"><span class="full">${esc(p.n)}</span><span class="short">${esc(last(p.n))}</span></span><span class="meta">Age ${r.age}<span class="full"> in ${cs.year}</span>${role?' · '+role:''}</span>
+      <span class="big">${fv(cardVal(p),m[5])}</span><span class="lbl">${esc(m[2])}, ${cs.year}</span><span class="go">View projection →</span></button>`}).join('');
+  $('#ccards').querySelectorAll('.cmp-card').forEach(c=>c.onclick=()=>goProj(cs.role,c.dataset.n));
 }
 function chart(){
   const box=$('#cchart'),svg=$('#csvg'),tip=box.querySelector('.cmp-tip');tip.hidden=true;
@@ -308,6 +321,7 @@ function chart(){
   let g='';niceTicks(lo,hi,4).forEach(v=>{g+=`<line x1="${ml}" x2="${ml+pw}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${ml-6}" y="${Y(v)+4}" text-anchor="end" font-size="10.5" fill="var(--muted)">${fv(v,dec==='%'?'%':(dec===3?3:dec===2?2:(Math.abs(hi-lo)<10?1:0)))}</text>`});
   yrs.forEach(y=>{g+=`<text x="${X(y)}" y="${H-7}" text-anchor="middle" font-size="10.5" fill="var(--muted)">${narrow?"'"+String(y).slice(2):y}</text>`});
   g+=`<text x="${ml}" y="11" font-size="10.5" fill="var(--muted)">${esc(label)}${dir<0?' · lower is better':''}</text>`;
+  {const xs=X(cs.year),bw=pw/(yrs.length-1)*.5;if(yrs.includes(cs.year))g=`<rect x="${xs-bw/2}" y="${mt}" width="${bw}" height="${ph}" fill="var(--chip)"/>`+g}
   if(foc){const c=COLS[foc.i];const a=foc.rows.map((r,j)=>`${j?'L':'M'}${X(r.season)},${Y(r[hik])}`).join('')+foc.rows.slice().reverse().map(r=>`L${X(r.season)},${Y(r[lok])}`).join('')+'Z';g+=`<path d="${a}" fill="${c}" opacity=".14"/>`}
   ps.forEach(p=>{const dim=foc&&foc!==p;const c=COLS[p.i];
     g+=`<path d="${p.rows.map((r,j)=>`${j?'L':'M'}${X(r.season)},${Y(r[k])}`).join('')}" fill="none" stroke="${c}" stroke-width="${dim?2:2.75}" opacity="${dim?.35:1}" stroke-linejoin="round"/>`;
@@ -324,28 +338,38 @@ function chart(){
     tip.innerHTML=`<div class="h">${y}</div>`+ps.map(p=>{const q=p.rows[j];return`<div class="r"><span><span style="color:${COLS[p.i]}">●</span> ${esc(last(p.n))}</span><span>${fv(q[k],dec)}${lok?` <span style="opacity:.6">(${fv(q[lok],dec)} to ${fv(q[hik],dec)})</span>`:''}</span></div>`}).join('');
     tip.hidden=false;const bw=box.clientWidth,tw=tip.offsetWidth,px=X(y)*r.width/W;let l=px+16;if(l+tw>bw)l=px-tw-16;tip.style.left=Math.max(4,l)+'px';tip.style.top='12px'}
   hov.addEventListener('pointermove',move);hov.addEventListener('pointerdown',move);hov.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'){tip.hidden=true;xh.setAttribute('visibility','hidden')}});
-  $('#cnote').textContent=lok?(foc?`Shaded: ${foc.n}'s 80% range. Tap his card again to hide it.`:'Tap a player card to show his 80% range.'):'';
+  if(!lok){$('#cnote').textContent='';return}
+  $('#cnote').innerHTML='<span>Show 80% range:</span> '+ps.map(p=>`<button type="button" class="rng" data-i="${p.i}" aria-pressed="${cs.focus===p.i}" style="--c:${COLS[p.i]}"><i></i>${esc(last(p.n))}</button>`).join('');
+  $('#cnote').querySelectorAll('.rng').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;cs.focus=cs.focus===i?null:i;chart()});
 }
 function table(){
   const ps=players();if(!ps.length){$('#ctbl').innerHTML='';return}
   const hit=cs.role==='hit',r0=p=>p.rows.find(r=>r.season===cs.year)||p.rows[0];
-  const yrs=ps[0].rows.map(r=>r.season);
-  $('#cyears').innerHTML=yrs.map(y=>`<button type="button" data-y="${y}" aria-pressed="${y===cs.year}">${y}</button>`).join('');
-  $('#cyears').querySelectorAll('button').forEach(b=>b.onclick=()=>{cs.year=+b.dataset.y;table()});
+
   const G=hit?[
     ['2027–2031',[['Projected WAR',p=>sum(p,'WAR'),1,1],['Full-season WAR',p=>sum(p,'WAR_ft'),1,1]]],
     [String(cs.year),[['Age',p=>r0(p).age,0,0],['WAR',p=>r0(p).WAR,1,1],['PA',p=>r0(p).PA,0,1],['AVG',p=>r0(p).AVG,3,1],['OBP',p=>r0(p).OBP,3,1],['SLG',p=>r0(p).SLG,3,1],['HR',p=>r0(p).HR,0,1],['SB',p=>r0(p).SB,0,1],['wRC+',p=>r0(p)['wRC+'],0,1],['Defense (runs)',p=>r0(p)['Fld+Pos'],1,1]]]]
    :[['2027–2031',[['Projected WAR',p=>sum(p,'WAR'),1,1],['Full-season WAR',p=>sum(p,'WAR_ft'),1,1]]],
     [String(cs.year),[['Age',p=>r0(p).age,0,0],['WAR',p=>r0(p).WAR,1,1],['IP',p=>r0(p).IP,0,1],['K%',p=>r0(p)['K%'],'%',1],['BB%',p=>r0(p)['BB%'],'%',-1],['HR/9',p=>r0(p)['HR/9'],2,-1],['FIP',p=>r0(p).FIP,2,-1],['WHIP',p=>r0(p).WHIP,2,-1]]]];
-  let h=`<thead><tr><th></th>${ps.map(p=>`<th><span style="color:${COLS[p.i]}">●</span> ${esc(last(p.n))}</th>`).join('')}</tr></thead><tbody>`;
+  let h=`<thead><tr><th></th>${ps.map(p=>`<th><a href="#" class="plink" data-n="${esc(p.n)}"><span style="color:${COLS[p.i]}">●</span> ${esc(last(p.n))}</a></th>`).join('')}</tr></thead><tbody>`;
   G.forEach(([gname,rows])=>{h+=`<tr class="grp"><td colspan="${ps.length+1}">${gname}</td></tr>`;
     rows.forEach(([lab,fn,dec,dir])=>{const vals=ps.map(fn);let best=-1;
       if(ps.length>1&&dir){const nums=vals.map(Number);const b=dir>0?Math.max(...nums):Math.min(...nums);if(nums.filter(x=>x===b).length===1)best=nums.indexOf(b)}
       h+=`<tr><td>${lab}</td>${vals.map((v,j)=>`<td class="${j===best?'best':''}">${fv(v,dec)}</td>`).join('')}</tr>`})});
   $('#ctbl').innerHTML=h+'</tbody>';
+  $('#ctbl').querySelectorAll('.plink').forEach(a=>a.onclick=e=>{e.preventDefault();goProj(cs.role,a.dataset.n)});
 }
 function draw(){controls();cards();chart();table();try{history.replaceState(null,'','#compare:'+cs.role+':'+cs.names[cs.role].map(encodeURIComponent).join('|'))}catch(e){}}
 function setRole(r){cs.role=r;cs.focus=null;draw()}
+function goProj(r,name){
+  try{history.pushState(null,'',location.pathname)}catch(e){}
+  show('main');
+  if(role!==r)window.setRole(r);
+  const q=document.getElementById('q');q.value=name;document.getElementById('minopp').value=0;  // the search already narrows to him; show his row even in a short season
+  const se=document.getElementById('season');if([...se.options].some(o=>+o.value===cs.year))se.value=String(cs.year);
+  pick(name);
+  requestAnimationFrame(()=>document.getElementById('panel').scrollIntoView({behavior:'smooth',block:'start'}));
+}
 $('#cH').onclick=()=>setRole('hit');$('#cP').onclick=()=>setRole('pit');
 for(let i=0;i<3;i++)$('#cq'+i).addEventListener('change',e=>{const v=e.target.value.trim().toLowerCase();const names=Object.keys(IDX[cs.role]);
   const hit=names.find(n=>n.toLowerCase()===v)||names.find(n=>n.toLowerCase().includes(v));
