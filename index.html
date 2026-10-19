@@ -1,8 +1,10 @@
-<!doctype html><html lang="en"><title>Player Projections</title>
+<!doctype html><html lang="en">
+<head>
+<title>Player Projections</title>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Every MLB hitter and pitcher, the next five seasons. Built from public data by Jake Mitchell.">
+<meta name="description" content="Projections for every MLB hitter and pitcher, 2027 to 2031, with player comparisons, breakouts, aging curves and comps. Built from public data by Jake Mitchell.">
 <meta property="og:type" content="website"><meta property="og:title" content="Player Projections">
-<meta property="og:description" content="Every MLB hitter and pitcher, the next five seasons. Built from public data by Jake Mitchell.">
+<meta property="og:description" content="Projections for every MLB hitter and pitcher, 2027 to 2031, with player comparisons, breakouts, aging curves and comps. Built from public data by Jake Mitchell.">
 <meta property="og:url" content="https://jmitchell3636.github.io/mlb-projections/">
 <meta property="og:image" content="https://jmitchell3636.github.io/mlb-projections/cover.png"><meta property="og:image:secure_url" content="https://jmitchell3636.github.io/mlb-projections/cover.png">
 <meta property="og:image:type" content="image/png">
@@ -151,6 +153,8 @@ table{font-size:.8rem}th,td{padding:6px 5px}
 @media (max-width:520px){.cmp-tbl table{font-size:.8rem}.cmp-tbl th,.cmp-tbl td{padding:6px 4px}}
 .sitenav{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 0 18px;overflow-x:auto}.sitenav a{font:600 .95rem var(--body);color:var(--muted);text-decoration:none;padding:9px 12px;border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap}.sitenav a:hover{color:var(--fg)}.sitenav a[aria-current="page"]{color:var(--fg);border-bottom-color:var(--accent)}
 </style>
+</head>
+<body>
 <div class="wrap">
 <nav class="sitenav" aria-label="Site"><a href="./" id="navProj" aria-current="page">Projections</a><a href="#compare" id="navCmp">Compare</a><a href="#breakouts" id="navBrk">Breakouts</a><a href="lab.html#aging">Aging curves</a><a href="lab.html#comps">Player comps</a></nav>
 <div id="viewMain">
@@ -543,3 +547,5 @@ let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{if(!$('#viewB
 })();
 
 </script>
+</body>
+</html>

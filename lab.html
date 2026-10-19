@@ -1,4 +1,6 @@
-<!doctype html><html lang="en"><title>Aging Curves &amp; Comps · Player Projections</title>
+<!doctype html><html lang="en">
+<head>
+<title>Aging Curves &amp; Comps · Player Projections</title>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="How the 2027 MLB projections age each type of hitter and pitcher, and which players project most alike. By Jake Mitchell.">
 <meta property="og:type" content="website"><meta property="og:title" content="Aging Curves &amp; Comps · Player Projections">
@@ -90,6 +92,8 @@ td.sim{font:.8rem var(--mono);white-space:nowrap}
 .sitenav a[aria-current="page"]{color:var(--fg);border-bottom-color:var(--accent)}
 
 </style>
+</head>
+<body>
 <div class="wrap">
 <nav class="sitenav" aria-label="Site"><a href="./">Projections</a><a href="./#compare">Compare</a><a href="./#breakouts">Breakouts</a><a href="#aging" data-tab="aging">Aging curves</a><a href="#comps" data-tab="comps">Player comps</a></nav>
 <h1 id="pageTitle">Aging Curves</h1>
@@ -328,3 +332,5 @@ draw();showTab(TAB);
 let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{TAB==='aging'?drawAging():drawComps()},80)}).observe(document.querySelector('.wrap'));
 })();
 </script>
+</body>
+</html>
