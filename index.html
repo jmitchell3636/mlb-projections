@@ -80,16 +80,38 @@ table{font-size:.8rem}th,td{padding:6px 5px}
 .panel h3{font-size:1.4rem}
 }
 [hidden]{display:none!important}
-.cmp-pick{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin:8px 0 12px}
-.cmp-slot{display:flex;flex-direction:column;gap:3px;font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-.cmp-slot span{display:flex;align-items:center;gap:6px}.cmp-slot i{width:10px;height:10px;border-radius:50%;display:inline-block}
-.cmp-chart{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px 10px 4px;min-width:0;touch-action:pan-y}
+.cmp-head{margin-bottom:6px}
+.cmp-pick{display:grid;grid-template-columns:auto repeat(3,minmax(0,1fr));gap:10px;align-items:center;margin:12px 0 14px}
+@media (max-width:700px){.cmp-pick{grid-template-columns:1fr}}
+.cmp-in{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:6px;padding:0 8px;background:var(--surface);min-width:0}
+.cmp-in i{width:10px;height:10px;border-radius:50%;flex:none}
+.cmp-in input{border:0;padding:8px 0;width:100%;background:transparent}
+.cmp-in input:focus-visible{outline:none}.cmp-in:focus-within{outline:2px solid var(--accent);outline-offset:1px}
+.cmp-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.cmp-card{all:unset;box-sizing:border-box;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:6px;padding:10px 12px;min-width:0;display:grid;gap:2px}
+.cmp-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.cmp-card[aria-pressed="true"]{background:var(--chip)}
+.cmp-card .nm{font:700 1.15rem/1.1 var(--display);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmp-card .meta{font:.74rem var(--mono);color:var(--muted)}
+.cmp-card .big{font:700 1.9rem/1.05 var(--display);font-variant-numeric:tabular-nums;margin-top:4px}
+.cmp-card .lbl{font:600 .68rem var(--body);text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.cmp-card .short{display:none}
+@media (max-width:520px){.cmp-card .full{display:none}.cmp-card .short{display:inline}.cmp-card{padding:8px}.cmp-card .nm{font-size:1rem}.cmp-card .big{font-size:1.5rem}.cmp-card .meta{font-size:.68rem}}
+.cmp-stats{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.cmp-stats button{font:600 .82rem var(--body);color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 12px;cursor:pointer}
+.cmp-stats button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.cmp-chart{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 6px 2px;min-width:0;touch-action:pan-y}
 .cmp-chart svg{display:block;width:100%;font-family:var(--mono)}
-.cmp-tip{position:absolute;pointer-events:none;background:#0d1a2e;color:#eef2f8;border-radius:5px;padding:8px 10px;font:12px/1.45 var(--mono);min-width:170px;box-shadow:0 6px 18px rgba(13,26,46,.25);z-index:3}
-.cmp-tip .r{display:flex;justify-content:space-between;gap:14px}.cmp-tip .h{font:600 13px var(--body);margin-bottom:3px}
-.cmp-tbl{margin-top:14px}.cmp-tbl td,.cmp-tbl th{cursor:default}.cmp-tbl tbody tr{cursor:default}.cmp-tbl tbody tr:hover{background:none}
+.cmp-tip{position:absolute;pointer-events:none;background:#0d1a2e;color:#eef2f8;border-radius:5px;padding:8px 10px;font:12px/1.45 var(--mono);min-width:150px;box-shadow:0 6px 18px rgba(13,26,46,.25);z-index:3}
+.cmp-tip .r{display:flex;justify-content:space-between;gap:12px}.cmp-tip .h{font:600 13px var(--body);margin-bottom:3px}
+.cmp-tbl{margin-top:16px;max-height:none}
+.cmp-tbl table{font-size:.86rem}
+.cmp-tbl th,.cmp-tbl td{cursor:default;white-space:nowrap}
+.cmp-tbl tbody tr{cursor:default}.cmp-tbl tbody tr:hover{background:none}
 .cmp-tbl th:nth-child(n+2),.cmp-tbl td:nth-child(n+2){text-align:right}
-.cmp-tbl td.best{font-weight:700;color:var(--accent)}
+.cmp-tbl tr.grp td{font:600 .7rem var(--body);text-transform:uppercase;letter-spacing:.07em;color:var(--muted);background:var(--chip);padding-top:5px;padding-bottom:5px}
+.cmp-tbl td.best{font-weight:700}
+@media (max-width:520px){.cmp-tbl table{font-size:.8rem}.cmp-tbl th,.cmp-tbl td{padding:6px 4px}}
 .sitenav{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 0 18px;overflow-x:auto}.sitenav a{font:600 .95rem var(--body);color:var(--muted);text-decoration:none;padding:9px 12px;border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap}.sitenav a:hover{color:var(--fg)}.sitenav a[aria-current="page"]{color:var(--fg);border-bottom-color:var(--accent)}
 </style>
 <div class="wrap">
@@ -127,20 +149,21 @@ table{font-size:.8rem}th,td{padding:6px 5px}
 <p class="foot"><strong>Data and credits.</strong> Projections, code and analysis by Jake Mitchell. Built from the <a href="https://sabr.org/lahman-database/">Lahman Baseball Database</a> (Sean Lahman / SABR, <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>), <a href="https://baseballsavant.mlb.com/">Baseball Savant</a> / Statcast data (© MLB Advanced Media; used for non-commercial analysis), and the <a href="https://github.com/chadwickbureau/register">Chadwick Bureau register</a> (<a href="https://opendatacommons.org/licenses/by/1-0/">ODC-By 1.0</a>). No other projection system is used.</p>
 </div>
 <section id="viewCmp" hidden>
-<h1>Compare Players</h1>
-<p class="lede">Put up to three players side by side: five-year paths with 80% ranges, and their 2027 lines. Same frozen projections as the rest of the site (October 14, 2026).</p>
+<div class="cmp-head"><h1>Compare Players</h1>
+<p class="lede">Up to three players, side by side for 2027–2031.</p></div>
 <div class="cmp-pick">
   <div class="seg" role="group" aria-label="Players"><button id="cH" type="button" aria-pressed="true">Hitters</button><button id="cP" type="button" aria-pressed="false">Pitchers</button></div>
-  <label class="cmp-slot" for="cq0"><span><i style="background:#1f4e8c"></i>Player 1</span><input id="cq0" type="search" list="cnames" placeholder="Search a name" autocomplete="off"></label>
-  <label class="cmp-slot" for="cq1"><span><i style="background:#c2410c"></i>Player 2</span><input id="cq1" type="search" list="cnames" placeholder="Search a name" autocomplete="off"></label>
-  <label class="cmp-slot" for="cq2"><span><i style="background:#2c8a66"></i>Player 3</span><input id="cq2" type="search" list="cnames" placeholder="Optional" autocomplete="off"></label>
-  <label class="cmp-slot" for="cm">Stat<select id="cm"></select></label>
+  <label class="cmp-in" for="cq0"><i style="background:#1f4e8c"></i><input id="cq0" type="search" list="cnames" placeholder="Add a player" autocomplete="off" aria-label="Player 1"></label>
+  <label class="cmp-in" for="cq1"><i style="background:#c2410c"></i><input id="cq1" type="search" list="cnames" placeholder="Add a player" autocomplete="off" aria-label="Player 2"></label>
+  <label class="cmp-in" for="cq2"><i style="background:#2c8a66"></i><input id="cq2" type="search" list="cnames" placeholder="Add a player" autocomplete="off" aria-label="Player 3"></label>
 </div>
 <datalist id="cnames"></datalist>
+<div class="cmp-cards" id="ccards"></div>
+<div class="cmp-stats" id="cstats" role="group" aria-label="Stat"></div>
 <div class="cmp-chart" id="cchart"><svg id="csvg" role="img" aria-label="Five-year comparison"></svg><div class="cmp-tip" hidden></div></div>
 <p class="small" id="cnote"></p>
-<div class="tablewrap cmp-tbl" style="max-height:none"><table id="ctbl"></table></div>
-<p class="small">Bold marks the best value in each row. Projected WAR includes the chance of injury, losing a job or retiring; full-season WAR assumes a healthy year. Tap a player in the Projections tab, then use the link in his panel to open him here.</p>
+<div class="tablewrap cmp-tbl"><table id="ctbl"></table></div>
+<p class="small">Projected WAR includes injury and role risk. Full-season WAR assumes a healthy year. Bold is the best in each row.</p>
 </section>
 </div>
 <script>
@@ -234,70 +257,91 @@ render();
 (function(){
 const $=s=>document.querySelector(s);
 const COLS=['#1f4e8c','#c2410c','#2c8a66'];
-const MET={hit:[['WAR','Projected WAR','WAR_lo','WAR_hi',1,1],['WAR_ft','Full-season WAR','WAR_ft_lo','WAR_ft_hi',1,1],['wOBA','wOBA','wOBA_slo','wOBA_shi',3,1],['wRC+','wRC+',null,null,0,1],['HR','Home runs',null,null,0,1],['PA','Plate appearances',null,null,0,1]],
-           pit:[['WAR','Projected WAR','WAR_lo','WAR_hi',1,1],['WAR_ft','Full-season WAR','WAR_ft_lo','WAR_ft_hi',1,1],['FIP','FIP','FIP_slo','FIP_shi',2,-1],['K%','Strikeout rate',null,null,'%',1],['BB%','Walk rate',null,null,'%',-1],['IP','Innings',null,null,0,1]]};
+// [key, button label, chart label, lo, hi, decimals, direction]
+const MET={hit:[['WAR','WAR','Projected WAR','WAR_lo','WAR_hi',1,1],['WAR_ft','Full-season WAR','Full-season WAR','WAR_ft_lo','WAR_ft_hi',1,1],['wOBA','wOBA','wOBA','wOBA_slo','wOBA_shi',3,1],['wRC+','wRC+','wRC+',null,null,0,1],['HR','HR','Home runs',null,null,0,1],['PA','PA','Plate appearances',null,null,0,1]],
+           pit:[['WAR','WAR','Projected WAR','WAR_lo','WAR_hi',1,1],['WAR_ft','Full-season WAR','Full-season WAR','WAR_ft_lo','WAR_ft_hi',1,1],['FIP','FIP','FIP','FIP_slo','FIP_shi',2,-1],['K%','K%','Strikeout rate',null,null,'%',1],['BB%','BB%','Walk rate',null,null,'%',-1],['IP','IP','Innings',null,null,0,1]]};
 const DEF={hit:['Juan Soto','Aaron Judge','Bobby Witt Jr.'],pit:['Tarik Skubal','Paul Skenes','Garrett Crochet']};
-const cs={role:'hit',names:{hit:[],pit:[]},metric:{hit:'WAR',pit:'WAR'}};
+const cs={role:'hit',names:{hit:[],pit:[]},metric:{hit:'WAR',pit:'WAR'},focus:null};
 const byName=r=>{const m={};R[r].forEach(x=>{(m[x.name]=m[x.name]||[]).push(x)});Object.values(m).forEach(a=>a.sort((p,q)=>p.season-q.season));return m};
 const IDX={hit:byName('hit'),pit:byName('pit')};
-const minOpp=(r,n)=>{const a=IDX[r][n];return a?a[0][r==='hit'?'PA':'IP']:0};
 ['hit','pit'].forEach(r=>{cs.names[r]=DEF[r].filter(n=>IDX[r][n]);
   if(cs.names[r].length<2){const top=Object.keys(IDX[r]).sort((a,b)=>IDX[r][b][0].WAR-IDX[r][a][0].WAR);cs.names[r]=top.slice(0,3)}});
-const fv=(k,v,d)=>{if(v==null||Number.isNaN(v))return'–';if(d==='%')return(100*v).toFixed(1)+'%';const s=v.toFixed(d);return(d===3&&Math.abs(v)<1)?s.replace(/^0/,''):s};
+const fv=(v,d)=>{if(v==null||Number.isNaN(v))return'–';if(d==='%')return(100*v).toFixed(1)+'%';const s=Math.abs(v).toFixed(d);const t=(d===3&&Math.abs(v)<1)?s.replace(/^0/,''):s;return(v<0?'−':'')+t};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const last=n=>{const p=n.split(' ');return /^(Jr\.|Sr\.|II|III|IV)$/.test(p[p.length-1])&&p.length>2?p.slice(-2).join(' '):p[p.length-1]};
+const players=()=>cs.names[cs.role].map((n,i)=>({n,i,rows:IDX[cs.role][n]})).filter(x=>x.rows);
+const sum=(p,c)=>p.rows.reduce((a,r)=>a+(r[c]||0),0);
 function niceTicks(lo,hi,n){const s0=(hi-lo)/n||1;const mg=10**Math.floor(Math.log10(s0));const e=s0/mg;const st=(e>=7.5?10:e>=3.5?5:e>=1.5?2:1)*mg;const t=[];for(let v=Math.ceil(lo/st)*st;v<=hi+st*1e-6;v+=st)t.push(+v.toFixed(8));return t}
+
 function controls(){
   $('#cH').setAttribute('aria-pressed',cs.role==='hit');$('#cP').setAttribute('aria-pressed',cs.role==='pit');
   $('#cnames').innerHTML=Object.keys(IDX[cs.role]).sort().map(n=>`<option value="${esc(n)}">`).join('');
   for(let i=0;i<3;i++)$('#cq'+i).value=cs.names[cs.role][i]||'';
-  $('#cm').innerHTML=MET[cs.role].map(m=>`<option value="${m[0]}">${m[1]}</option>`).join('');$('#cm').value=cs.metric[cs.role];
+  $('#cstats').innerHTML=MET[cs.role].map(m=>`<button type="button" data-k="${m[0]}" aria-pressed="${m[0]===cs.metric[cs.role]}">${m[1]}</button>`).join('');
+  $('#cstats').querySelectorAll('button').forEach(b=>b.onclick=()=>{cs.metric[cs.role]=b.dataset.k;controls();chart()});
+}
+function cards(){
+  const ps=players(),hit=cs.role==='hit';
+  $('#ccards').innerHTML=ps.map(p=>{const r=p.rows[0];const role=hit?'':({SP:'SP',CL:'Closer',SU:'Setup',MID:'RP'})[r.role]||'';
+    return `<button class="cmp-card" type="button" data-i="${p.i}" aria-pressed="${cs.focus===p.i}" style="--c:${COLS[p.i]}">
+      <span class="nm"><span class="full">${esc(p.n)}</span><span class="short">${esc(last(p.n))}</span></span><span class="meta">Age ${r.age}<span class="full"> in 2027</span>${role?' · '+role:''}</span>
+      <span class="big">${fv(sum(p,'WAR'),1)}</span><span class="lbl">WAR, 2027–31</span></button>`}).join('');
+  $('#ccards').querySelectorAll('.cmp-card').forEach(c=>c.onclick=()=>{const i=+c.dataset.i;cs.focus=cs.focus===i?null:i;cards();chart()});
 }
 function chart(){
   const box=$('#cchart'),svg=$('#csvg'),tip=box.querySelector('.cmp-tip');tip.hidden=true;
-  const W=Math.max(300,box.clientWidth-20),H=W<560?300:360,m=MET[cs.role].find(x=>x[0]===cs.metric[cs.role]);
-  const [k,label,lok,hik,dec]=m;const ps=cs.names[cs.role].map((n,i)=>({n,i,rows:IDX[cs.role][n]})).filter(x=>x.rows);
-  if(!ps.length){svg.innerHTML='';$('#cnote').textContent='Pick a player to start.';return}
-  let lo=Infinity,hi=-Infinity;ps.forEach(p=>p.rows.forEach(r=>{[r[k],lok&&r[lok],hik&&r[hik]].forEach(v=>{if(v!=null&&!Number.isNaN(v)&&v!==false){lo=Math.min(lo,v);hi=Math.max(hi,v)}})}));
-  const pad=(hi-lo)*.1||.5;lo-=pad;hi+=pad;if(k.startsWith('WAR')&&lo>0)lo=Math.min(0,lo);
-  const ml=W<560?44:52,mr=W<560?14:24,mt=22,mb=30,pw=W-ml-mr,ph=H-mt-mb,yrs=ps[0].rows.map(r=>r.season);
+  const ps=players();if(!ps.length){svg.innerHTML='';$('#cnote').textContent='';return}
+  const m=MET[cs.role].find(x=>x[0]===cs.metric[cs.role]);const [k,,label,lok,hik,dec,dir]=m;
+  const W=Math.max(300,box.clientWidth-12),narrow=W<560,H=narrow?280:340;
+  const foc=ps.find(p=>p.i===cs.focus&&lok);
+  let lo=Infinity,hi=-Infinity;const ext=v=>{if(v!=null&&!Number.isNaN(v)){lo=Math.min(lo,v);hi=Math.max(hi,v)}};
+  ps.forEach(p=>p.rows.forEach(r=>ext(r[k])));if(foc)foc.rows.forEach(r=>{ext(r[lok]);ext(r[hik])});
+  const pad=(hi-lo)*.12||.5;lo-=pad;hi+=pad;if(k.startsWith('WAR')&&lo>0&&lo<1.5)lo=0;
+  const lblW=narrow?64:100,ml=narrow?36:46,mr=lblW,mt=18,mb=26,pw=W-ml-mr,ph=H-mt-mb,yrs=ps[0].rows.map(r=>r.season);
   const X=y=>ml+(y-yrs[0])/(yrs[yrs.length-1]-yrs[0])*pw,Y=v=>mt+ph-(v-lo)/(hi-lo)*ph;
-  let g='';niceTicks(lo,hi,5).forEach(v=>{g+=`<line x1="${ml}" x2="${ml+pw}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${ml-6}" y="${Y(v)+4}" text-anchor="end" font-size="10.5" fill="var(--muted)">${fv(k,v,dec)}</text>`});
-  yrs.forEach(y=>{g+=`<text x="${X(y)}" y="${H-8}" text-anchor="middle" font-size="10.5" fill="var(--muted)">${y}</text>`});
-  g+=`<text x="${ml}" y="12" font-size="10.5" fill="var(--muted)">${esc(label)}${lok?', 80% range':''}${m[5]<0?' (lower is better)':''}</text>`;
-  ps.forEach(p=>{if(!lok)return;const a=p.rows.map((r,j)=>`${j?'L':'M'}${X(r.season)},${Y(r[hik])}`).join('')+p.rows.slice().reverse().map(r=>`L${X(r.season)},${Y(r[lok])}`).join('')+'Z';g+=`<path d="${a}" fill="${COLS[p.i]}" opacity=".12"/>`});
-  ps.forEach(p=>{g+=`<path d="${p.rows.map((r,j)=>`${j?'L':'M'}${X(r.season)},${Y(r[k])}`).join('')}" fill="none" stroke="${COLS[p.i]}" stroke-width="2.5"/>`;
-    p.rows.forEach(r=>{g+=`<circle cx="${X(r.season)}" cy="${Y(r[k])}" r="3.6" fill="${COLS[p.i]}" stroke="#fff" stroke-width="1.5"/>`});
-    const e=p.rows[p.rows.length-1];});
+  let g='';niceTicks(lo,hi,4).forEach(v=>{g+=`<line x1="${ml}" x2="${ml+pw}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${ml-6}" y="${Y(v)+4}" text-anchor="end" font-size="10.5" fill="var(--muted)">${fv(v,dec==='%'?'%':(dec===3?3:dec===2?2:(Math.abs(hi-lo)<10?1:0)))}</text>`});
+  yrs.forEach(y=>{g+=`<text x="${X(y)}" y="${H-7}" text-anchor="middle" font-size="10.5" fill="var(--muted)">${narrow?"'"+String(y).slice(2):y}</text>`});
+  g+=`<text x="${ml}" y="11" font-size="10.5" fill="var(--muted)">${esc(label)}${dir<0?' · lower is better':''}</text>`;
+  if(foc){const c=COLS[foc.i];const a=foc.rows.map((r,j)=>`${j?'L':'M'}${X(r.season)},${Y(r[hik])}`).join('')+foc.rows.slice().reverse().map(r=>`L${X(r.season)},${Y(r[lok])}`).join('')+'Z';g+=`<path d="${a}" fill="${c}" opacity=".14"/>`}
+  ps.forEach(p=>{const dim=foc&&foc!==p;const c=COLS[p.i];
+    g+=`<path d="${p.rows.map((r,j)=>`${j?'L':'M'}${X(r.season)},${Y(r[k])}`).join('')}" fill="none" stroke="${c}" stroke-width="${dim?2:2.75}" opacity="${dim?.35:1}" stroke-linejoin="round"/>`;
+    p.rows.forEach(r=>{g+=`<circle cx="${X(r.season)}" cy="${Y(r[k])}" r="3.4" fill="${c}" stroke="#fff" stroke-width="1.5" opacity="${dim?.35:1}"/>`})});
+  // direct labels at line ends, nudged apart
+  const labs=ps.map(p=>({p,y:Y(p.rows[p.rows.length-1][k])})).sort((a,b)=>a.y-b.y);
+  for(let j=1;j<labs.length;j++)if(labs[j].y-labs[j-1].y<14)labs[j].y=labs[j-1].y+14;
+  labs.forEach(({p,y})=>{const dim=foc&&foc!==p;g+=`<text x="${ml+pw+8}" y="${y+4}" font-size="${narrow?10.5:12}" font-weight="600" fill="${COLS[p.i]}" opacity="${dim?.45:1}" style="font-family:var(--body)">${esc(narrow?last(p.n):p.n)}</text>`});
   g+=`<line id="cxh" y1="${mt}" y2="${mt+ph}" stroke="var(--muted)" stroke-dasharray="2 3" visibility="hidden"/><rect id="chov" x="${ml-10}" y="${mt}" width="${pw+20}" height="${ph}" fill="transparent"/>`;
   svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('height',H);svg.innerHTML=g;
   const xh=svg.querySelector('#cxh'),hov=svg.querySelector('#chov');
   function move(ev){const r=svg.getBoundingClientRect();const sx=(ev.clientX-r.left)*W/r.width;let j=Math.round((sx-ml)/pw*(yrs.length-1));j=Math.max(0,Math.min(yrs.length-1,j));const y=yrs[j];
     xh.setAttribute('x1',X(y));xh.setAttribute('x2',X(y));xh.setAttribute('visibility','visible');
-    tip.innerHTML=`<div class="h">${y}</div>`+ps.map(p=>{const q=p.rows[j];return`<div class="r"><span><span style="color:${COLS[p.i]}">●</span> ${esc(p.n)} (${q.age})</span><span>${fv(k,q[k],dec)}${lok?` <span style="opacity:.6">${fv(k,q[lok],dec)}–${fv(k,q[hik],dec)}</span>`:''}</span></div>`}).join('');
-    tip.hidden=false;const bw=box.clientWidth,tw=tip.offsetWidth;let l=X(y)*r.width/W+24;if(l+tw>bw)l=X(y)*r.width/W-tw-4;tip.style.left=Math.max(0,l)+'px';tip.style.top='14px'}
+    tip.innerHTML=`<div class="h">${y}</div>`+ps.map(p=>{const q=p.rows[j];return`<div class="r"><span><span style="color:${COLS[p.i]}">●</span> ${esc(last(p.n))}</span><span>${fv(q[k],dec)}${lok?` <span style="opacity:.6">(${fv(q[lok],dec)} to ${fv(q[hik],dec)})</span>`:''}</span></div>`}).join('');
+    tip.hidden=false;const bw=box.clientWidth,tw=tip.offsetWidth,px=X(y)*r.width/W;let l=px+16;if(l+tw>bw)l=px-tw-16;tip.style.left=Math.max(4,l)+'px';tip.style.top='12px'}
   hov.addEventListener('pointermove',move);hov.addEventListener('pointerdown',move);hov.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'){tip.hidden=true;xh.setAttribute('visibility','hidden')}});
-  $('#cnote').textContent=lok?'Shaded bands are 80% ranges: each player should land inside his band about 4 seasons in 5.':'';
+  $('#cnote').textContent=lok?(foc?`Shaded: ${foc.n}'s 80% range. Tap his card again to hide it.`:'Tap a player card to show his 80% range.'):'';
 }
 function table(){
-  const ps=cs.names[cs.role].map((n,i)=>({n,i,rows:IDX[cs.role][n]})).filter(x=>x.rows);
-  if(!ps.length){$('#ctbl').innerHTML='';return}
-  const hit=cs.role==='hit';const sum=(p,c)=>p.rows.reduce((a,r)=>a+(r[c]||0),0);
-  const rows=hit?[['Age in 2027',p=>p.rows[0].age,0,0],['2027–31 projected WAR',p=>sum(p,'WAR'),1,1],['2027–31 full-season WAR',p=>sum(p,'WAR_ft'),1,1],['2027 projected WAR',p=>p.rows[0].WAR,1,1],['2027 PA',p=>p.rows[0].PA,0,1],['2027 AVG',p=>p.rows[0].AVG,3,1],['2027 OBP',p=>p.rows[0].OBP,3,1],['2027 SLG',p=>p.rows[0].SLG,3,1],['2027 HR',p=>p.rows[0].HR,0,1],['2027 SB',p=>p.rows[0].SB,0,1],['2027 wOBA',p=>p.rows[0].wOBA,3,1],['2027 wRC+',p=>p.rows[0]['wRC+'],0,1],['2027 defense + position (runs)',p=>p.rows[0]['Fld+Pos'],1,1],['2031 wOBA',p=>p.rows[4].wOBA,3,1]]
-    :[['Age in 2027',p=>p.rows[0].age,0,0],['Role',p=>({SP:'Starter',CL:'Closer',SU:'Setup',MID:'Middle relief'})[p.rows[0].role]||p.rows[0].role,null,0],['2027–31 projected WAR',p=>sum(p,'WAR'),1,1],['2027–31 full-season WAR',p=>sum(p,'WAR_ft'),1,1],['2027 projected WAR',p=>p.rows[0].WAR,1,1],['2027 IP',p=>p.rows[0].IP,0,1],['2027 K%',p=>p.rows[0]['K%'],'%',1],['2027 BB%',p=>p.rows[0]['BB%'],'%',-1],['2027 HR/9',p=>p.rows[0]['HR/9'],2,-1],['2027 FIP',p=>p.rows[0].FIP,2,-1],['2027 WHIP',p=>p.rows[0].WHIP,2,-1],['2031 FIP',p=>p.rows[4].FIP,2,-1]];
-  let h=`<thead><tr><th>Stat</th>${ps.map(p=>`<th style="text-align:right"><span style="color:${COLS[p.i]}">●</span> ${esc(p.n)}</th>`).join('')}</tr></thead><tbody>`;
-  rows.forEach(([lab,fn,dec,dir])=>{const vals=ps.map(fn);let best=-1;
-    if(dir&&ps.length>1){const nums=vals.map(Number);best=dir>0?nums.indexOf(Math.max(...nums)):nums.indexOf(Math.min(...nums))}
-    h+=`<tr><td>${lab}</td>${vals.map((v,j)=>`<td class="${j===best?'best':''}">${dec===null?esc(v):fv('',v,dec)}</td>`).join('')}</tr>`});
+  const ps=players();if(!ps.length){$('#ctbl').innerHTML='';return}
+  const hit=cs.role==='hit',r0=p=>p.rows[0];
+  const G=hit?[
+    ['2027–2031',[['Projected WAR',p=>sum(p,'WAR'),1,1],['Full-season WAR',p=>sum(p,'WAR_ft'),1,1]]],
+    ['2027',[['WAR',p=>r0(p).WAR,1,1],['PA',p=>r0(p).PA,0,1],['AVG',p=>r0(p).AVG,3,1],['OBP',p=>r0(p).OBP,3,1],['SLG',p=>r0(p).SLG,3,1],['HR',p=>r0(p).HR,0,1],['SB',p=>r0(p).SB,0,1],['wRC+',p=>r0(p)['wRC+'],0,1],['Defense (runs)',p=>r0(p)['Fld+Pos'],1,1]]]]
+   :[['2027–2031',[['Projected WAR',p=>sum(p,'WAR'),1,1],['Full-season WAR',p=>sum(p,'WAR_ft'),1,1]]],
+    ['2027',[['WAR',p=>r0(p).WAR,1,1],['IP',p=>r0(p).IP,0,1],['K%',p=>r0(p)['K%'],'%',1],['BB%',p=>r0(p)['BB%'],'%',-1],['HR/9',p=>r0(p)['HR/9'],2,-1],['FIP',p=>r0(p).FIP,2,-1],['WHIP',p=>r0(p).WHIP,2,-1]]]];
+  let h=`<thead><tr><th></th>${ps.map(p=>`<th><span style="color:${COLS[p.i]}">●</span> ${esc(last(p.n))}</th>`).join('')}</tr></thead><tbody>`;
+  G.forEach(([gname,rows])=>{h+=`<tr class="grp"><td colspan="${ps.length+1}">${gname}</td></tr>`;
+    rows.forEach(([lab,fn,dec,dir])=>{const vals=ps.map(fn);let best=-1;
+      if(ps.length>1){const nums=vals.map(Number);const b=dir>0?Math.max(...nums):Math.min(...nums);if(nums.filter(x=>x===b).length===1)best=nums.indexOf(b)}
+      h+=`<tr><td>${lab}</td>${vals.map((v,j)=>`<td class="${j===best?'best':''}">${fv(v,dec)}</td>`).join('')}</tr>`})});
   $('#ctbl').innerHTML=h+'</tbody>';
 }
-function draw(){controls();chart();table();try{history.replaceState(null,'','#compare:'+cs.role+':'+cs.names[cs.role].map(encodeURIComponent).join('|'))}catch(e){}}
-function setRole(r){cs.role=r;draw()}
+function draw(){controls();cards();chart();table();try{history.replaceState(null,'','#compare:'+cs.role+':'+cs.names[cs.role].map(encodeURIComponent).join('|'))}catch(e){}}
+function setRole(r){cs.role=r;cs.focus=null;draw()}
 $('#cH').onclick=()=>setRole('hit');$('#cP').onclick=()=>setRole('pit');
-$('#cm').onchange=e=>{cs.metric[cs.role]=e.target.value;chart()};
 for(let i=0;i<3;i++)$('#cq'+i).addEventListener('change',e=>{const v=e.target.value.trim().toLowerCase();const names=Object.keys(IDX[cs.role]);
   const hit=names.find(n=>n.toLowerCase()===v)||names.find(n=>n.toLowerCase().includes(v));
   const cur=cs.names[cs.role].slice();if(!v){cur[i]=undefined}else if(hit){cur[i]=hit}else{e.target.value=cur[i]||'';return}
-  cs.names[cs.role]=cur.filter((x,j)=>x&&cur.indexOf(x)===j);draw()});
+  cs.names[cs.role]=cur.filter((x,j)=>x&&cur.indexOf(x)===j);cs.focus=null;draw()});
 function show(v){const c=v==='compare';$('#viewMain').hidden=c;$('#viewCmp').hidden=!c;
   $('#navProj').toggleAttribute('aria-current',!c);if(!c)$('#navProj').setAttribute('aria-current','page');
   $('#navCmp').toggleAttribute('aria-current',c);if(c)$('#navCmp').setAttribute('aria-current','page');
@@ -310,6 +354,7 @@ $('#navCmp').addEventListener('click',e=>{e.preventDefault();location.hash='comp
 $('#navProj').addEventListener('click',e=>{if(location.hash){e.preventDefault();history.replaceState(null,'',location.pathname);show('main')}});
 window.addEventListener('hashchange',fromHash);fromHash();
 let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{if(!$('#viewCmp').hidden)chart()},80)}).observe(document.querySelector('.wrap'));
-window.cmpAdd=function(role,name){cs.role=role;const cur=cs.names[role].filter(n=>n!==name);cs.names[role]=[name,...cur].slice(0,3);location.hash='compare:'+role+':'+cs.names[role].map(encodeURIComponent).join('|');};
+window.cmpAdd=function(role,name){cs.role=role;cs.focus=null;const cur=cs.names[role].filter(n=>n!==name);cs.names[role]=[name,...cur].slice(0,3);location.hash='compare:'+role+':'+cs.names[role].map(encodeURIComponent).join('|');};
 })();
+
 </script>
