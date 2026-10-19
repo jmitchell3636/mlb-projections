@@ -281,14 +281,17 @@ function controls(){
   $('#cnames').innerHTML=Object.keys(IDX[cs.role]).sort().map(n=>`<option value="${esc(n)}">`).join('');
   for(let i=0;i<3;i++)$('#cq'+i).value=cs.names[cs.role][i]||'';
   $('#cstats').innerHTML=MET[cs.role].map(m=>`<button type="button" data-k="${m[0]}" aria-pressed="${m[0]===cs.metric[cs.role]}">${m[1]}</button>`).join('');
-  $('#cstats').querySelectorAll('button').forEach(b=>b.onclick=()=>{cs.metric[cs.role]=b.dataset.k;controls();chart()});
+  $('#cstats').querySelectorAll('button').forEach(b=>b.onclick=()=>{cs.metric[cs.role]=b.dataset.k;controls();cards();chart()});
 }
+const TOTAL=new Set(['WAR','WAR_ft','HR','PA','IP']);
+function cardVal(p){const k=cs.metric[cs.role];if(TOTAL.has(k))return sum(p,k);
+  const w=cs.role==='hit'?'PA':'IP';const tw=sum(p,w);return tw?p.rows.reduce((a,r)=>a+r[k]*(r[w]||0),0)/tw:p.rows[0][k]}
 function cards(){
-  const ps=players(),hit=cs.role==='hit';
+  const ps=players(),hit=cs.role==='hit',m=MET[cs.role].find(x=>x[0]===cs.metric[cs.role]);
   $('#ccards').innerHTML=ps.map(p=>{const r=p.rows[0];const role=hit?'':({SP:'SP',CL:'Closer',SU:'Setup',MID:'RP'})[r.role]||'';
     return `<button class="cmp-card" type="button" data-i="${p.i}" aria-pressed="${cs.focus===p.i}" style="--c:${COLS[p.i]}">
       <span class="nm"><span class="full">${esc(p.n)}</span><span class="short">${esc(last(p.n))}</span></span><span class="meta">Age ${r.age}<span class="full"> in 2027</span>${role?' · '+role:''}</span>
-      <span class="big">${fv(sum(p,'WAR'),1)}</span><span class="lbl">WAR, 2027–31</span></button>`}).join('');
+      <span class="big">${fv(cardVal(p),m[5])}</span><span class="lbl">${esc(m[2])}, 2027–31${TOTAL.has(m[0])?' total':' avg'}</span></button>`}).join('');
   $('#ccards').querySelectorAll('.cmp-card').forEach(c=>c.onclick=()=>{const i=+c.dataset.i;cs.focus=cs.focus===i?null:i;cards();chart()});
 }
 function chart(){
