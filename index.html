@@ -1,11 +1,11 @@
-<!doctype html><html lang="en"><title>2027 MLB Projections</title>
+<!doctype html><html lang="en"><title>Player Projections</title>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Every MLB hitter and pitcher, the next five seasons. Built from public data by Jake Mitchell.">
-<meta property="og:type" content="website"><meta property="og:title" content="2027 MLB Projections">
+<meta property="og:type" content="website"><meta property="og:title" content="Player Projections">
 <meta property="og:description" content="Every MLB hitter and pitcher, the next five seasons. Built from public data by Jake Mitchell.">
 <meta property="og:url" content="https://jmitchell3636.github.io/mlb-projections/">
 <meta property="og:image" content="https://jmitchell3636.github.io/mlb-projections/cover.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="2027 MLB Projections">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Player Projections">
 <meta name="twitter:image" content="https://jmitchell3636.github.io/mlb-projections/cover.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
@@ -423,7 +423,7 @@ function show(v){const c=v==='compare';$('#viewMain').hidden=v!=='main';$('#view
   if(v!=='other'){const vb=document.getElementById('viewBrk');if(vb)vb.hidden=true;const nb=document.getElementById('navBrk');if(nb)nb.removeAttribute('aria-current')}
   $('#navProj').toggleAttribute('aria-current',v==='main');if(v==='main')$('#navProj').setAttribute('aria-current','page');
   $('#navCmp').toggleAttribute('aria-current',c);if(c)$('#navCmp').setAttribute('aria-current','page');
-  if(v!=='other')document.title=c?'Compare Players · 2027 MLB Projections':'2027 MLB Projections';if(c)draw()}
+  if(v!=='other')document.title=c?'Compare Players · Player Projections':'Player Projections';if(c)draw()}
 function fromHash(){const hsh=decodeURIComponent(location.hash.slice(1));const m=hsh.match(/^compare(?::(hit|pit):(.*))?$/);
   if(!m){show(/^breakouts/.test(hsh)?'other':'main');return}
   if(m[1]){cs.role=m[1];const ns=m[2].split('|').filter(n=>IDX[m[1]][n]).slice(0,3);if(ns.length)cs.names[m[1]]=ns}
@@ -533,7 +533,7 @@ $('#bkN').querySelectorAll('button').forEach(b=>b.onclick=()=>{bs.n=+b.dataset.n
 $('#bkQ').addEventListener('change',e=>{bs.q=e.target.value;draw()});
 $('#bkQ').addEventListener('input',e=>{if(!e.target.value){bs.q='';draw()}});
 function route(){const on=location.hash.slice(1).startsWith('breakouts');$('#viewBrk').hidden=!on;
-  $('#navBrk').toggleAttribute('aria-current',on);if(on){$('#navBrk').setAttribute('aria-current','page');document.title='Breakouts & Letdowns · 2027 MLB Projections';draw()}}
+  $('#navBrk').toggleAttribute('aria-current',on);if(on){$('#navBrk').setAttribute('aria-current','page');document.title='Breakouts & Letdowns · Player Projections';draw()}}
 $('#navBrk').addEventListener('click',e=>{e.preventDefault();location.hash='breakouts'});
 window.addEventListener('hashchange',route);route();
 let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{if(!$('#viewBrk').hidden)draw()},100)}).observe(document.querySelector('.wrap'));

@@ -1,7 +1,7 @@
-<!doctype html><html lang="en"><title>Aging Curves &amp; Comps · 2027 MLB Projections</title>
+<!doctype html><html lang="en"><title>Aging Curves &amp; Comps · Player Projections</title>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="How the 2027 MLB projections age each type of hitter and pitcher, and which players project most alike. By Jake Mitchell.">
-<meta property="og:type" content="website"><meta property="og:title" content="Aging Curves &amp; Comps · 2027 MLB Projections">
+<meta property="og:type" content="website"><meta property="og:title" content="Aging Curves &amp; Comps · Player Projections">
 <meta property="og:description" content="How the projections age each type of hitter and pitcher, and which players project most alike.">
 <meta property="og:url" content="https://jmitchell3636.github.io/mlb-projections/lab.html">
 <meta property="og:image" content="https://jmitchell3636.github.io/mlb-projections/cover.png">
@@ -320,7 +320,7 @@ function showTab(t){TAB=t;$('#tab-aging').hidden=t!=='aging';$('#tab-comps').hid
   const cur=document.querySelector(`.sitenav a[data-tab="${t}"]`);if(cur)cur.setAttribute('aria-current','page');
   $('#pageTitle').textContent=t==='aging'?'Aging Curves':'Player Comps';
   $('#pageLede').innerHTML=LEDE[t]+' Everything here comes from the same frozen projections as the main page (October 14, 2026), for every player with at least 100 projected PA or 20 IP in 2027.';
-  document.title=(t==='aging'?'Aging Curves':'Player Comps')+' · 2027 MLB Projections';
+  document.title=(t==='aging'?'Aging Curves':'Player Comps')+' · Player Projections';
   t==='aging'?drawAging():drawComps()}
 document.querySelectorAll('.sitenav a[data-tab]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();showTab(a.dataset.tab);try{history.replaceState(null,'','#'+a.dataset.tab)}catch(_){}}));
 window.addEventListener('hashchange',()=>{const t=location.hash.slice(1).split(':')[0];if(t==='aging'||t==='comps')showTab(t)});
