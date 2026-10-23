@@ -106,6 +106,11 @@ table{font-size:.8rem}th,td{padding:6px 5px}
 .bk-more{font:600 .72rem var(--body);color:var(--accent);background:none;border:0;padding:0;cursor:pointer;justify-self:start;margin-top:2px}
 .bk-x{margin-top:8px;border-top:1px solid var(--line);padding-top:8px;display:grid;gap:7px;cursor:default}
 .bk-x h4{margin:0;font:700 .86rem var(--body);color:var(--fg)}
+.bk-why2{display:grid;gap:6px}.bk-why2 h4{margin:0;font:700 .9rem var(--body);color:var(--fg)}
+.bk-why2 ul{list-style:none;margin:0;padding:0;display:grid;gap:7px}
+.bk-why2 li{display:grid;grid-template-columns:48px minmax(0,1fr);gap:8px;font-size:.84rem;line-height:1.38;color:var(--fg)}
+.bk-why2 .vl{font:700 .84rem var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+.bk-why2 .good{color:#2c7a4b}.bk-why2 .bad{color:var(--bad)}
 .bk-tw{overflow-x:auto}
 .bk-t{border-collapse:collapse;width:100%;font:.8rem var(--mono);font-variant-numeric:tabular-nums}
 .bk-t th,.bk-t td{padding:4px 6px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
@@ -221,7 +226,7 @@ table{font-size:.8rem}th,td{padding:6px 5px}
 <div class="cmp-chart" id="bkChart"><svg id="bkSvg" role="img" aria-label="2026 actual vs 2027 projected"></svg><div class="cmp-tip" hidden></div></div>
 <p class="small" id="bkChartNote"></p>
 <p class="small" id="bkNote"></p>
-<p class="small">2026 stats from <a href="https://baseballsavant.mlb.com/">Baseball Savant</a>. Projections are the frozen October 14, 2026 numbers. Tap a player to see his stats.</p>
+<p class="small">2026 stats from <a href="https://baseballsavant.mlb.com/">Baseball Savant</a>. Projections are the frozen October 14, 2026 numbers. Tap a player to see why the model projects him that way.</p>
 </section>
 <section id="viewCmp" hidden>
 <div class="cmp-head"><h1>Compare Players</h1>
@@ -480,10 +485,42 @@ function card(r,i,up,max){const open=bs.open===r.n;return `<li class="bk-row" da
   <div class="bk-top"><a href="#" class="bk-name" data-n="${esc(r.n)}">${esc(r.n)}</a><span class="bk-chg ${up?'up':'dn'}">${chgTxt(r)}</span></div>
   <div class="bk-meta">${metaTxt(r)}</div>
   <div class="bk-stat">${statTxt(r)}<span class="bk-bar"><i class="${up?'up':'dn'}" style="width:${(100*Math.abs(r.d)/max).toFixed(0)}%"></i></span></div>
-  ${PAST[bs.role]&&PAST[bs.role][r.n]?`<button type="button" class="bk-more" aria-expanded="${open}">${open?'Hide stats ▴':'Show his stats ▾'}</button>`:''}
+  ${PAST[bs.role]&&PAST[bs.role][r.n]?`<button type="button" class="bk-more" aria-expanded="${open}">${open?'Hide ▴':'Why? ▾'}</button>`:''}
   ${open?explain(r):''}</div></li>`}
 const P27={};['hit','pit'].forEach(k=>{const cols=D[k+'_cols'];P27[k]={};D[k].forEach(r=>{if(r[cols.indexOf('season')]===2027){const o={};cols.forEach((c,i)=>o[c]=r[i]);P27[k][o.name]=o}})});
 const pct=v=>v==null?'—':(100*v).toFixed(1)+'%';
+const CN={hit:{strikeouts:'strikeouts',walks:'walks','hit by pitch':'hit-by-pitches',singles:'singles',doubles:'doubles',triples:'triples','home runs':'home-run power'},
+  pit:{strikeouts:'strikeouts',walks:'walks','hit by pitch':'hit batters','home runs':'home runs allowed'}};
+const MLN=n=>n.replace(/^Baseline /,'projected ').replace(/ rate$/,' rate');
+function reasons(r){const hit=hitR(),e=(EXP[bs.role]||{})[r.n],past=(PAST[bs.role]||{})[r.n];if(!e)return'';
+  const good=v=>hit?v>0:v<0,cn=CN[bs.role],key=hit?7:4,fmt=v=>hit?f3(v):v.toFixed(2),stat=hit?'wOBA':'FIP';
+  const line=y=>past&&past[y]&&past[y][key]!=null?`${fmt(past[y][key])} in ${y}`:null;
+  const hist=['2024','2025'].map(line).filter(Boolean);
+  const out=[];
+  // track record
+  if(hist.length){const c=e.trackTop[0];
+    out.push({v:e.track,h:good(e.track)?'Down year vs. his track record':'Career year vs. his track record',
+      t:`${stat} ${hist.join(', ')}, then ${fmt(r.v26)} in 2026. The model trusts ${e.seasons} seasons of track record over one, so it expects ${good(e.track)?'a bounce-back':'a step back'}${Math.abs(e.trackTop[1])>=(hit?2:.03)?`, mostly in his ${cn[c]||c}`:''}.`})}
+  // regression to the mean
+  out.push({v:e.reg,h:'Regression to the mean',
+    t:`With ${e.opp.toLocaleString()} ${hit?'PA':'batters faced'} in the sample, the model pulls his ${Math.abs(e.regTop[1])>=(hit?1:.02)?cn[e.regTop[0]]||e.regTop[0]:'numbers'} toward league average${hit?(good(e.reg)?', which helps him':', which costs him'):(good(e.reg)?', which helps him':', which hurts him')}.`});
+  // aging
+  out.push({v:e.age,h:good(e.age)?'Still developing':'Aging',
+    t:good(e.age)?`Heading into his age-${e.ageTo} season, the aging curve still has him improving.`:`Heading into his age-${e.ageTo} season, the aging curve has him starting to decline.`});
+  // comparable players
+  const mt=e.mlTop.length?` Biggest factor: his ${MLN(e.mlTop[0][0]).replace(/^(\d{4}) /,'$1 ')}.`:'';
+  out.push({v:e.ml,h:'Similar players',
+    t:`${hit?'Hitters':'Pitchers'} with a profile like his have historically ${good(e.ml)?'beaten':'fallen short of'} a projection like this one.${mt}`});
+  // Statcast
+  if(hit){out.push({v:e.st,h:good(e.st)?'Quality of contact':'Quality of contact',
+    t:`His 2026 xwOBA (${f3(r.x26)}) was ${r.x26>=r.v26?'above':'below'} his actual wOBA (${f3(r.v26)}), so the model expects ${good(e.st)?'better':'worse'} results on contact.`})}
+  else if(e.stTop.length){const [n,,x,a]=e.stTop[0];
+    out.push({v:e.st,h:'Stuff and batted balls',t:`Statcast: ${n} ${x}${a?` vs. ${a} average`:''}${e.stTop[1]?`; ${e.stTop[1][0]} ${e.stTop[1][2]}${e.stTop[1][3]?` vs. ${e.stTop[1][3]}`:''}`:''}.`})}
+  const min=hit?2:.05;let rows=out.filter(x=>Math.abs(x.v)>=min).sort((a,b)=>Math.abs(b.v)-Math.abs(a.v));
+  if(!rows.length)rows=out.sort((a,b)=>Math.abs(b.v)-Math.abs(a.v)).slice(0,1);
+  const val=v=>hit?(v>=0?'+':'−')+Math.round(Math.abs(v)):(v>=0?'+':'−')+Math.abs(v).toFixed(2);
+  return `<div class="bk-why2"><h4>Why the model has him ${good(hit?r.d:-r.d)?'up':'down'}</h4><ul>${rows.map(x=>`<li><span class="vl ${good(x.v)?'good':'bad'}">${val(x.v)}</span><span><b>${x.h}.</b> ${x.t}</span></li>`).join('')}</ul>
+  <p class="small" style="margin:0">${hit?'Points of wOBA':'FIP'} each factor adds or takes away in the model. Smaller adjustments aren’t listed.</p></div>`}
 function explain(r){const hit=hitR(),past=(PAST[bs.role]||{})[r.n],p=P27[bs.role][r.n];if(!past||!p)return'';
   const COLS=hit?[['PA',0,v=>Math.round(v),0],['AVG',1,f3,1],['OBP',2,f3,1],['SLG',3,f3,1],['HR',4,v=>Math.round(v),0],['K%',5,pct,-1],['BB%',6,pct,1],['wOBA',7,f3,1]]
                :[['IP',0,v=>v.toFixed(0),0],['K%',1,pct,1],['BB%',2,pct,-1],['HR/9',3,v=>v.toFixed(2),-1],['FIP',4,v=>v==null?'—':v.toFixed(2),-1],['WHIP',5,v=>v.toFixed(2),-1],['ERA',6,v=>v==null?'—':v.toFixed(2),-1]];
@@ -491,7 +528,7 @@ function explain(r){const hit=hitR(),past=(PAST[bs.role]||{})[r.n],p=P27[bs.role
   const yrs=Object.keys(past).sort(),last=past['2026'];
   const cell=(c,v,isP)=>{let cl='';if(isP&&last&&v!=null&&last[c[1]]!=null&&c[3]){const d=(v-last[c[1]])*c[3];const tol=c[0]==='HR'?1:c[0].endsWith('%')?.005:hit?.005:.05;cl=d>tol?'good':d<-tol?'bad':''}
     return `<td class="${cl}">${v==null?'—':c[2](v)}</td>`};
-  return `<div class="bk-x"><div class="bk-tw"><table class="bk-t"><thead><tr><th></th>${COLS.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody>
+  return `<div class="bk-x">${reasons(r)}<div class="bk-tw"><table class="bk-t"><thead><tr><th></th>${COLS.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody>
   ${yrs.map(y=>`<tr><th>${y}</th>${COLS.map(c=>cell(c,past[y][c[1]],0)).join('')}</tr>`).join('')}
   <tr class="pj"><th>2027 proj.</th>${COLS.map(c=>cell(c,proj[c[1]],1)).join('')}</tr></tbody></table></div>
   <p class="small" style="margin:0">2024–26 actual (Baseball Savant). 2027 is the model’s projection; green and red mark better or worse than 2026.${hit?'':' The model doesn’t project ERA.'}</p>
