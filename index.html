@@ -247,7 +247,7 @@ table{font-size:.8rem}th,td{padding:6px 5px}
 <p class="small">Projected WAR includes injury and role risk. Full-season WAR assumes a healthy year. Bold is the best in each row.</p>
 </section>
 </div>
-<script src="data.js?v=2"></script>
+<script src="data.js?v=d1afa5d3"></script>
 <script>
 
 document.getElementById('sha').textContent=D.sha.slice(0,16)+'…';
@@ -485,14 +485,14 @@ function card(r,i,up,max){const open=bs.open===r.n;return `<li class="bk-row" da
   <div class="bk-top"><a href="#" class="bk-name" data-n="${esc(r.n)}">${esc(r.n)}</a><span class="bk-chg ${up?'up':'dn'}">${chgTxt(r)}</span></div>
   <div class="bk-meta">${metaTxt(r)}</div>
   <div class="bk-stat">${statTxt(r)}<span class="bk-bar"><i class="${up?'up':'dn'}" style="width:${(100*Math.abs(r.d)/max).toFixed(0)}%"></i></span></div>
-  ${PAST[bs.role]&&PAST[bs.role][r.n]?`<button type="button" class="bk-more" aria-expanded="${open}">${open?'Hide ▴':'Why? ▾'}</button>`:''}
+  ${typeof PAST!=='undefined'&&PAST[bs.role]&&PAST[bs.role][r.n]?`<button type="button" class="bk-more" aria-expanded="${open}">${open?'Hide ▴':'Why? ▾'}</button>`:''}
   ${open?explain(r):''}</div></li>`}
 const P27={};['hit','pit'].forEach(k=>{const cols=D[k+'_cols'];P27[k]={};D[k].forEach(r=>{if(r[cols.indexOf('season')]===2027){const o={};cols.forEach((c,i)=>o[c]=r[i]);P27[k][o.name]=o}})});
 const pct=v=>v==null?'—':(100*v).toFixed(1)+'%';
 const CN={hit:{strikeouts:'strikeouts',walks:'walks','hit by pitch':'hit-by-pitches',singles:'singles',doubles:'doubles',triples:'triples','home runs':'home-run power'},
   pit:{strikeouts:'strikeouts',walks:'walks','hit by pitch':'hit batters','home runs':'home runs allowed'}};
 const MLN=n=>n.replace(/^Baseline /,'projected ').replace(/ rate$/,' rate');
-function reasons(r){const hit=hitR(),e=(EXP[bs.role]||{})[r.n],past=(PAST[bs.role]||{})[r.n];if(!e)return'';
+function reasons(r){const hit=hitR(),e=((typeof EXP!=='undefined'?EXP:{})[bs.role]||{})[r.n],past=(PAST[bs.role]||{})[r.n];if(!e)return'';
   const good=v=>hit?v>0:v<0,cn=CN[bs.role],key=hit?7:4,fmt=v=>hit?f3(v):v.toFixed(2),stat=hit?'wOBA':'FIP';
   const line=y=>past&&past[y]&&past[y][key]!=null?`${fmt(past[y][key])} in ${y}`:null;
   const hist=['2024','2025'].map(line).filter(Boolean);
@@ -521,7 +521,7 @@ function reasons(r){const hit=hitR(),e=(EXP[bs.role]||{})[r.n],past=(PAST[bs.rol
   const val=v=>hit?(v>=0?'+':'−')+Math.round(Math.abs(v)):(v>=0?'+':'−')+Math.abs(v).toFixed(2);
   return `<div class="bk-why2"><h4>Why the model has him ${good(hit?r.d:-r.d)?'up':'down'}</h4><ul>${rows.map(x=>`<li><span class="vl ${good(x.v)?'good':'bad'}">${val(x.v)}</span><span><b>${x.h}.</b> ${x.t}</span></li>`).join('')}</ul>
   <p class="small" style="margin:0">${hit?'Points of wOBA':'FIP'} each factor adds or takes away in the model. Smaller adjustments aren’t listed.</p></div>`}
-function explain(r){const hit=hitR(),past=(PAST[bs.role]||{})[r.n],p=P27[bs.role][r.n];if(!past||!p)return'';
+function explain(r){const hit=hitR(),past=((typeof PAST!=='undefined'?PAST:{})[bs.role]||{})[r.n],p=P27[bs.role][r.n];if(!past||!p)return'';
   const COLS=hit?[['PA',0,v=>Math.round(v),0],['AVG',1,f3,1],['OBP',2,f3,1],['SLG',3,f3,1],['HR',4,v=>Math.round(v),0],['K%',5,pct,-1],['BB%',6,pct,1],['wOBA',7,f3,1]]
                :[['IP',0,v=>v.toFixed(0),0],['K%',1,pct,1],['BB%',2,pct,-1],['HR/9',3,v=>v.toFixed(2),-1],['FIP',4,v=>v==null?'—':v.toFixed(2),-1],['WHIP',5,v=>v.toFixed(2),-1],['ERA',6,v=>v==null?'—':v.toFixed(2),-1]];
   const proj=hit?[p.PA,p.AVG,p.OBP,p.SLG,p.HR,p.SO/p.PA,p.BB/p.PA,p.wOBA]:[p.IP,p['K%'],p['BB%'],p['HR/9'],p.FIP,p.WHIP,null];
@@ -589,7 +589,7 @@ function bindCards(){
     if(t.closest('.bk-open')){e.preventDefault();window.goProj&&window.goProj(bs.role,t.closest('.bk-open').dataset.n);return}
     if(t.closest('.bk-cmp')){e.preventDefault();window.cmpAdd&&window.cmpAdd(bs.role,t.closest('.bk-cmp').dataset.n);return}
     if(t.closest('.bk-x'))return;
-    e.preventDefault();const n=li.dataset.n;if(!PAST[bs.role]||!PAST[bs.role][n])return;
+    e.preventDefault();const n=li.dataset.n;if(typeof PAST==='undefined'||!PAST[bs.role]||!PAST[bs.role][n])return;
     const y=li.getBoundingClientRect().top,where=li.closest('#bkUp,#bkDn,#bkFind');bs.open=bs.open===n?null:n;draw();
     const nl=[...document.querySelectorAll('#viewBrk .bk-row')].find(x=>x.dataset.n===n&&x.closest('#bkUp,#bkDn,#bkFind')===(where&&document.getElementById(where.id)));
     if(nl){const dy=nl.getBoundingClientRect().top-y;if(dy)window.scrollBy(0,dy)}});
@@ -613,7 +613,7 @@ function draw(){
 $('#bkH').onclick=()=>{bs.role='hit';bs.open=null;bs.q='';$('#bkQ').value='';draw()};$('#bkP').onclick=()=>{bs.role='pit';bs.open=null;bs.q='';$('#bkQ').value='';draw()};
 $('#bkRole').querySelectorAll('button').forEach(b=>b.onclick=()=>{bs.prole=b.dataset.r;draw()});
 $('#bkN').querySelectorAll('button').forEach(b=>b.onclick=()=>{bs.n=+b.dataset.n;draw()});
-$('#bkQ').addEventListener('change',e=>{bs.q=e.target.value;draw()});
+$('#bkQ').addEventListener('change',e=>{if(e.target.value===bs.q)return;bs.q=e.target.value;bs.open=null;draw()});
 $('#bkQ').addEventListener('input',e=>{if(!e.target.value){bs.q='';draw()}});
 function route(){const on=location.hash.slice(1).startsWith('breakouts');$('#viewBrk').hidden=!on;
   $('#navBrk').toggleAttribute('aria-current',on);if(on){$('#navBrk').setAttribute('aria-current','page');document.title='Breakouts & Letdowns · Player Projections';draw()}}
