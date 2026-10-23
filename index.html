@@ -169,11 +169,32 @@ table{font-size:.8rem}th,td{padding:6px 5px}
 .cmp-tbl td.best{font-weight:700}
 @media (max-width:520px){.cmp-tbl table{font-size:.8rem}.cmp-tbl th,.cmp-tbl td{padding:6px 4px}}
 .sitenav{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 0 18px;overflow-x:auto}.sitenav a{font:600 .95rem var(--body);color:var(--muted);text-decoration:none;padding:9px 12px;border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap}.sitenav a:hover{color:var(--fg)}.sitenav a[aria-current="page"]{color:var(--fg);border-bottom-color:var(--accent)}
+.ct-form{align-items:end}
+.ct-player{max-width:260px}
+.ct-f{display:grid;gap:3px;font:600 .72rem var(--body);color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.ct-f input,.ct-f select{font:500 .95rem var(--body);color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 9px;width:130px;text-transform:none;letter-spacing:0}
+.ct-adv{margin:4px 0 14px}.ct-adv summary{cursor:pointer;font-weight:600;color:var(--accent);font-size:.88rem}
+.ct-advrow{display:flex;flex-wrap:wrap;gap:14px;margin:10px 0 6px}
+.ct-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:6px 0 10px}
+.ct-k{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.ct-k .l{font:600 .7rem var(--body);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.ct-k .v{font:700 1.5rem var(--display);color:var(--fg);font-variant-numeric:tabular-nums;margin-top:2px}
+.ct-k .s{font-size:.78rem;color:var(--muted);margin-top:2px}
+.ct-k.good .v{color:#2c7a4b}.ct-k.bad .v{color:var(--bad)}
+.ct-verdict{font-size:1rem;margin:4px 0 12px;color:var(--fg)}
+.ct-tw{overflow-x:auto;margin-top:8px}
+.ct-t{border-collapse:collapse;width:100%;font:.84rem var(--mono);font-variant-numeric:tabular-nums}
+.ct-t th,.ct-t td{padding:6px 8px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+.ct-t thead th{color:var(--muted);font-weight:600;font-family:var(--body);font-size:.76rem}
+.ct-t td:first-child,.ct-t th:first-child{text-align:left}
+.ct-t tr.est td{color:var(--muted);font-style:italic}
+.ct-t tr.tot td{font-weight:700;border-top:2px solid var(--line)}
+.ct-t .good{color:#2c7a4b}.ct-t .bad{color:var(--bad)}
 </style>
 </head>
 <body>
 <div class="wrap">
-<nav class="sitenav" aria-label="Site"><a href="./" id="navProj" aria-current="page">Projections</a><a href="#compare" id="navCmp">Compare</a><a href="#breakouts" id="navBrk">Breakouts</a><a href="lab.html#aging">Aging curves</a><a href="lab.html#comps">Player comps</a></nav>
+<nav class="sitenav" aria-label="Site"><a href="./" id="navProj" aria-current="page">Projections</a><a href="#compare" id="navCmp">Compare</a><a href="#breakouts" id="navBrk">Breakouts</a><a href="#contracts" id="navCon">Contracts</a><a href="lab.html#aging">Aging curves</a><a href="lab.html#comps">Player comps</a></nav>
 <div id="viewMain">
 <h1>Player Projections</h1>
 <p class="lede">Five-year projections for every MLB hitter and pitcher, fit through the 2026 season. Component rates use fitted regression and season weights, per-horizon LightGBM and neural-network corrections, and a Statcast layer: an xwOBA-minus-wOBA luck correction for hitters, and a skill layer (velocity, whiffs, called strikes and more) for pitchers. Projected playing time includes injury and role risk; full-season values show a healthy year. Every number carries an 80% range.</p>
@@ -227,6 +248,29 @@ table{font-size:.8rem}th,td{padding:6px 5px}
 <p class="small" id="bkChartNote"></p>
 <p class="small" id="bkNote"></p>
 <p class="small">2026 stats from <a href="https://baseballsavant.mlb.com/">Baseball Savant</a>. Projections are the frozen October 14, 2026 numbers. Tap a player to see why the model projects him that way.</p>
+</section>
+<section id="viewCon" hidden>
+<h1>Contract Calculator</h1>
+<p class="lede">Is a contract worth it? The model’s projected WAR, priced at what teams pay for a win in free agency, against what the player is paid.</p>
+<div class="cmp-filters ct-form">
+  <div class="seg" role="group" aria-label="Players"><button id="ctH" type="button" aria-pressed="true">Hitters</button><button id="ctP" type="button" aria-pressed="false">Pitchers</button></div>
+  <label class="cmp-in ct-player" for="ctQ"><span aria-hidden="true">⌕</span><input id="ctQ" type="search" list="ctnames" placeholder="Pick a player" autocomplete="off" aria-label="Player"></label>
+  <label class="ct-f">Years<select id="ctY" aria-label="Contract years"></select></label>
+  <label class="ct-f">Per year ($M)<input id="ctA" type="number" min="0" step="0.5" inputmode="decimal" placeholder="e.g. 25" aria-label="Average annual value in millions"></label>
+</div>
+<datalist id="ctnames"></datalist>
+<details class="ct-adv"><summary>Market assumptions</summary>
+  <div class="ct-advrow">
+    <label class="ct-f">$ per WAR, 2026 ($M)<input id="ctR" type="number" min="1" step="0.1" value="11.2"></label>
+    <label class="ct-f">Yearly market growth (%)<input id="ctI" type="number" min="0" step="0.5" value="5"></label>
+  </div>
+  <p class="small">Defaults: teams paid about $11.2M per projected WAR in the 2025–26 free-agent market, and future salaries are commonly grown 5% a year (<a href="https://blogs.fangraphs.com/what-are-teams-paying-for-a-win-in-free-agency-2026-edition/">FanGraphs</a>). The same article finds stars cost more per win ($12.8M for 2+ WAR players) than role players.</p>
+</details>
+<div id="ctOut"></div>
+<div class="cmp-chart" id="ctChart"><svg id="ctSvg" role="img" aria-label="Projected WAR by season"></svg></div>
+<p class="small" id="ctChartNote"></p>
+<div class="ct-tw"><table class="ct-t" id="ctTable"></table></div>
+<p class="small" id="ctNote"></p>
 </section>
 <section id="viewCmp" hidden>
 <div class="cmp-head"><h1>Compare Players</h1>
@@ -445,12 +489,12 @@ for(let i=0;i<3;i++)$('#cq'+i).addEventListener('change',e=>{const v=e.target.va
   const cur=cs.names[cs.role].slice();if(!v){cur[i]=undefined}else if(hit){cur[i]=hit}else{e.target.value=cur[i]||'';return}
   cs.names[cs.role]=cur.filter((x,j)=>x&&cur.indexOf(x)===j);cs.focus=null;draw()});
 function show(v){const c=v==='compare';$('#viewMain').hidden=v!=='main';$('#viewCmp').hidden=!c;
-  if(v!=='other'){const vb=document.getElementById('viewBrk');if(vb)vb.hidden=true;const nb=document.getElementById('navBrk');if(nb)nb.removeAttribute('aria-current')}
+  if(v!=='other'){['viewBrk','viewCon'].forEach(i=>{const e=document.getElementById(i);if(e)e.hidden=true});['navBrk','navCon'].forEach(i=>{const e=document.getElementById(i);if(e)e.removeAttribute('aria-current')})}
   $('#navProj').toggleAttribute('aria-current',v==='main');if(v==='main')$('#navProj').setAttribute('aria-current','page');
   $('#navCmp').toggleAttribute('aria-current',c);if(c)$('#navCmp').setAttribute('aria-current','page');
   if(v!=='other')document.title=c?'Compare Players · Player Projections':'Player Projections';if(c)draw()}
 function fromHash(){const hsh=decodeURIComponent(location.hash.slice(1));const m=hsh.match(/^compare(?::(hit|pit):(.*))?$/);
-  if(!m){show(/^breakouts/.test(hsh)?'other':'main');return}
+  if(!m){show(/^(breakouts|contracts)/.test(hsh)?'other':'main');return}
   if(m[1]){cs.role=m[1];const ns=m[2].split('|').filter(n=>IDX[m[1]][n]).slice(0,3);if(ns.length)cs.names[m[1]]=ns}
   show('compare')}
 $('#navCmp').addEventListener('click',e=>{e.preventDefault();location.hash='compare'});
@@ -622,6 +666,93 @@ window.addEventListener('hashchange',route);route();
 let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{if(!$('#viewBrk').hidden)draw()},100)}).observe(document.querySelector('.wrap'));
 })();
 
+</script>
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const FIRST=2027,LAST=2031,BASE=2026;
+// every player's 2027-2031 projection, from the model
+const PL={hit:{},pit:{}};
+['hit','pit'].forEach(k=>{const cols=D[k+'_cols'],ix=n=>cols.indexOf(n);
+  D[k].forEach(r=>{const n=r[ix('name')];(PL[k][n]=PL[k][n]||{})[r[ix('season')]]={age:r[ix('age')],war:r[ix('WAR')],lo:r[ix('WAR_lo')],hi:r[ix('WAR_hi')]}})});
+// past 2031: the model's own average year-over-year WAR change by age, among players projected for 1.5+ WAR
+const AGE={};
+['hit','pit'].forEach(k=>{const sum={},cnt={};
+  Object.values(PL[k]).forEach(p=>{if(!p[FIRST]||p[FIRST].war<1.5)return;
+    for(let y=FIRST;y<LAST;y++){const a=p[y],b=p[y+1];if(!a||!b)continue;const g=Math.round(b.age);sum[g]=(sum[g]||0)+(b.war-a.war);cnt[g]=(cnt[g]||0)+1}});
+  const raw={};Object.keys(sum).forEach(g=>{if(cnt[g]>=5)raw[g]=sum[g]/cnt[g]});
+  const ages=Object.keys(raw).map(Number).sort((a,b)=>a-b);
+  AGE[k]=g=>{const lo=ages[0],hi=ages[ages.length-1],x=Math.max(lo,Math.min(hi,g));
+    let s=0,n=0;for(let d=-1;d<=1;d++){if(raw[x+d]!=null){s+=raw[x+d];n++}}return n?s/n:0}});
+const cs={role:'hit',name:null};
+const m$=v=>(v<0?'−':'')+'$'+Math.abs(v).toFixed(Math.abs(v)>=100?0:1)+'M';
+const w1=v=>(v<0?'−':'')+Math.abs(v).toFixed(1);
+for(let y=1;y<=10;y++)$('#ctY').insertAdjacentHTML('beforeend',`<option value="${y}"${y===5?' selected':''}>${y}</option>`);
+function names(){const n=Object.keys(PL[cs.role]).filter(x=>PL[cs.role][x][FIRST]).sort((a,b)=>PL[cs.role][b][FIRST].war-PL[cs.role][a][FIRST].war);return n}
+function controls(){$('#ctH').setAttribute('aria-pressed',cs.role==='hit');$('#ctP').setAttribute('aria-pressed',cs.role==='pit');
+  $('#ctnames').innerHTML=names().slice(0,600).map(n=>`<option value="${esc(n)}">`).join('')}
+function seasons(p,yrs){const out=[];let prev=null;
+  for(let i=0;i<yrs;i++){const y=FIRST+i;
+    if(p[y]){prev={y,age:p[y].age,war:p[y].war,lo:p[y].lo,hi:p[y].hi,est:false}}
+    else{const age=prev.age+1,d=AGE[cs.role](Math.round(age)),war=prev.war+d,sh=d;
+      prev={y,age,war,lo:prev.lo+sh,hi:prev.hi+sh,est:true}}
+    out.push({...prev,war:Math.max(prev.war,0),lo:Math.max(prev.lo,0),hi:Math.max(prev.hi,0)})}
+  return out}
+function draw(){controls();
+  const p=PL[cs.role][cs.name],out=$('#ctOut');
+  if(!p){out.innerHTML='<p class="small">Pick a player to start.</p>';$('#ctSvg').innerHTML='';$('#ctTable').innerHTML='';$('#ctChartNote').textContent='';$('#ctNote').textContent='';return}
+  const yrs=+$('#ctY').value,aav=parseFloat($('#ctA').value),rate=Math.max(.1,parseFloat($('#ctR').value)||11.2),g=(parseFloat($('#ctI').value)||0)/100;
+  const S=seasons(p,yrs).map(s=>{const pw=rate*Math.pow(1+g,s.y-BASE);return {...s,pw,val:s.war*pw,vlo:s.lo*pw,vhi:s.hi*pw,sal:isFinite(aav)?aav:null}});
+  const T=k=>S.reduce((a,s)=>a+s[k],0);
+  const war=T('war'),lo=T('lo'),hi=T('hi'),val=T('val'),vlo=T('vlo'),vhi=T('vhi'),be=val/yrs;
+  const hasA=isFinite(aav)&&aav>=0,cost=hasA?aav*yrs:null,sur=hasA?val-cost:null;
+  const nEst=S.filter(s=>s.est).length;
+  const verdict=!hasA?`At the model’s projection, ${esc(cs.name)} is worth about <b>${m$(be)} a year</b> over ${yrs} year${yrs>1?'s':''}. Enter a salary to see the surplus.`
+    :sur>=0?`At ${m$(aav)} a year, the model projects <b>${m$(sur)} of surplus value</b>: the contract pays for ${w1(cost/(val/war))} WAR and he projects for ${w1(war)}.`
+    :`At ${m$(aav)} a year, the model projects an <b>overpay of ${m$(-sur)}</b>: the contract pays for ${w1(cost/(val/war))} WAR and he projects for ${w1(war)}.`;
+  out.innerHTML=`<p class="ct-verdict">${verdict}</p><div class="ct-kpis">
+    <div class="ct-k"><div class="l">Projected WAR</div><div class="v">${w1(war)}</div><div class="s">over ${yrs} season${yrs>1?'s':''}, playing time included</div></div>
+    <div class="ct-k"><div class="l">Market value</div><div class="v">${m$(val)}</div><div class="s">at ${m$(S[0].pw)} per WAR in ${FIRST}, +${(g*100).toFixed(1).replace(/\.0$/,'')}% a year</div></div>
+    <div class="ct-k"><div class="l">Break-even salary</div><div class="v">${m$(be)}</div><div class="s">per year for ${yrs} year${yrs>1?'s':''}</div></div>
+    ${hasA?`<div class="ct-k ${sur>=0?'good':'bad'}"><div class="l">${sur>=0?'Surplus':'Overpay'}</div><div class="v">${m$(Math.abs(sur))}</div><div class="s">vs ${m$(cost)} total cost</div></div>`:''}</div>`;
+  chart(S,hasA?aav:null);
+  const hdr=`<thead><tr><th>Season</th><th>Age</th><th>Proj. WAR</th><th>80% range</th><th>$ per WAR</th><th>Value</th>${hasA?'<th>Salary</th><th>Surplus</th>':''}</tr></thead>`;
+  const rows=S.map(s=>`<tr class="${s.est?'est':''}"><td>${s.y}${s.est?' est.':''}</td><td>${Math.round(s.age)}</td><td>${w1(s.war)}</td><td>${w1(s.lo)}–${w1(s.hi)}</td><td>${m$(s.pw)}</td><td>${m$(s.val)}</td>${hasA?`<td>${m$(aav)}</td><td class="${s.val-aav>=0?'good':'bad'}">${(s.val-aav>=0?'+':'')}${m$(s.val-aav)}</td>`:''}</tr>`).join('');
+  const tot=`<tr class="tot"><td>Total</td><td></td><td>${w1(war)}</td><td></td><td></td><td>${m$(val)}</td>${hasA?`<td>${m$(cost)}</td><td class="${sur>=0?'good':'bad'}">${sur>=0?'+':''}${m$(sur)}</td>`:''}</tr>`;
+  $('#ctTable').innerHTML=hdr+'<tbody>'+rows+tot+'</tbody>';
+  $('#ctNote').textContent=`WAR is the model’s projection including playing time, so injury risk is built in. ${nEst?`Seasons after ${LAST} (marked est.) go past the model’s five-year projections: they continue from his ${LAST} projection using the model’s average year-to-year WAR change for players that age. `:''}Seasons below replacement count as 0 WAR. Not adjusted for deferrals, opt-outs or the time value of money.`;
+}
+function chart(S,aav){const box=$('#ctChart'),svg=$('#ctSvg');
+  const W=Math.max(300,box.clientWidth-12),H=Math.min(320,Math.max(220,W*.42));
+  const ml=40,mr=12,mt=14,mb=30,pw=W-ml-mr,ph=H-mt-mb;
+  const need=aav!=null?S.map(s=>aav/s.pw):[];
+  const top=Math.max(1,...S.map(s=>s.hi),...need)*1.08;
+  const X=i=>ml+(i+.5)*pw/S.length,bw=Math.min(46,pw/S.length*.55),Y=v=>mt+ph-v/top*ph;
+  let g='';const st=top>8?2:1;
+  for(let v=0;v<=top;v+=st)g+=`<line x1="${ml}" x2="${ml+pw}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${ml-6}" y="${Y(v)+4}" text-anchor="end" font-size="10" fill="var(--muted)">${v}</text>`;
+  S.forEach((s,i)=>{const x=X(i);
+    g+=`<rect x="${x-bw/2}" y="${Y(s.war)}" width="${bw}" height="${Math.max(0,Y(0)-Y(s.war))}" rx="3" fill="var(--accent)" opacity="${s.est?.35:.85}"/>`;
+    g+=`<line x1="${x}" x2="${x}" y1="${Y(s.hi)}" y2="${Y(s.lo)}" stroke="var(--fg)" stroke-width="1.5" opacity=".55"/><line x1="${x-6}" x2="${x+6}" y1="${Y(s.hi)}" y2="${Y(s.hi)}" stroke="var(--fg)" opacity=".55"/><line x1="${x-6}" x2="${x+6}" y1="${Y(s.lo)}" y2="${Y(s.lo)}" stroke="var(--fg)" opacity=".55"/>`;
+    g+=`<text x="${x}" y="${H-10}" text-anchor="middle" font-size="10" fill="var(--muted)">${s.y}</text>`});
+  if(aav!=null){g+=`<path d="M${S.map((s,i)=>`${X(i)-bw/2-4},${Y(need[i])} L${X(i)+bw/2+4},${Y(need[i])}`).join(' M')}" stroke="var(--bad)" stroke-width="2.5" stroke-dasharray="5 3" fill="none"/>`}
+  g+=`<text transform="translate(11 ${mt+ph/2}) rotate(-90)" text-anchor="middle" font-size="10" fill="var(--muted)">WAR</text>`;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('height',H);svg.innerHTML=g;
+  $('#ctChartNote').textContent='Bars: projected WAR each season, with the 80% range.'+(S.some(s=>s.est)?' Faded bars are estimates past 2031.':'')+(aav!=null?' Red dashes: the WAR he needs that season to earn his salary.':'');
+}
+$('#ctH').onclick=()=>{cs.role='hit';cs.name=names()[0];$('#ctQ').value=cs.name;draw()};
+$('#ctP').onclick=()=>{cs.role='pit';cs.name=names()[0];$('#ctQ').value=cs.name;draw()};
+$('#ctQ').addEventListener('change',e=>{const v=e.target.value.trim();const n=PL[cs.role][v]?v:names().find(x=>x.toLowerCase().includes(v.toLowerCase()));if(n){cs.name=n;e.target.value=n;draw()}});
+['#ctY','#ctA','#ctR','#ctI'].forEach(s=>$(s).addEventListener('input',draw));
+function route(){const h=decodeURIComponent(location.hash.slice(1));const on=h.startsWith('contracts');$('#viewCon').hidden=!on;
+  $('#navCon').toggleAttribute('aria-current',on);
+  if(on){$('#navCon').setAttribute('aria-current','page');document.title='Contract Calculator · Player Projections';
+    const m=h.match(/^contracts:(hit|pit):(.+)$/);if(m&&PL[m[1]][m[2]]){cs.role=m[1];cs.name=m[2]}
+    if(!cs.name){cs.name=names()[0]}$('#ctQ').value=cs.name;draw()}}
+$('#navCon').addEventListener('click',e=>{e.preventDefault();location.hash='contracts'});
+window.addEventListener('hashchange',route);route();
+let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{if(!$('#viewCon').hidden)draw()},100)}).observe(document.querySelector('.wrap'));
+})();
 </script>
 </body>
 </html>
